@@ -143,11 +143,11 @@ public class QueueWorker extends Thread {
                                     if (INFO.get(area) != null) {
                                         Neb.logger.Println("Delete link: " + area + ": " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), Neb.logger.DEBUG);
                                         utils.delLink(link, (ArrayList) INFO.get(area).get("links"));
-                                        if (link.size() == 7 && link.get(6).equals("custom")) {
+//                                        if (link.size() == 7 && link.get(6).equals("custom")) {
+                                        if (link.size() == 6) {
                                             Map links_delete_info = utils.readJSONFile(Neb.links_delete);
                                             ArrayList<ArrayList<String>> links_delete_area = (ArrayList) links_delete_info.get(area);
                                             if (links_delete_area != null) {
-                                                //                                        links_delete_area.add(link);
                                                 utils.addLink(link, links_delete_area);
                                             } else {
                                                 ArrayList<ArrayList<String>> list_tmp = new ArrayList();
