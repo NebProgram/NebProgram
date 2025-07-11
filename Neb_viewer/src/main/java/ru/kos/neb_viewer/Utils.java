@@ -2188,33 +2188,36 @@ public class Utils {
         Main.contextCanvasMenu.add(new AbstractAction("Add Text") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Runnable task = () -> {
-                    Point2D pt;
-                    pt = Main.canvas.getRoot().getDefaultInputManager().getCurrentCanvasPosition();
-                    pt = Main.canvas.getCamera().localToView(pt);
-                    JFontChooser jFontChooser = new JFontChooser();
-                    if(jFontChooser.showDialog(Main.m_Main) == 0) {
-                        String text = jFontChooser.text.getText();
-                        String font_name = jFontChooser.getSelectedFontFamily();
-                        int style = jFontChooser.getSelectedFontStyle();
-                        int size = jFontChooser.getSelectedFontSize();
-                        PText ptext = new PText();
-                        ptext.setText(text);
-                        size = (int)(size/Main.view_scale);
-                        Font font = new Font(font_name, style, size);
-                        ptext.setFont(font);
-                        ptext.addAttribute("text", text);
-                        ptext.setX(pt.getX());
-                        ptext.setY(pt.getY());
-                        ptext.addAttribute("size", size);
-                        Main.textCustomLayer.addChild(ptext);
-                        repaintText();
-                        Main.isChanged = true;
-                    }                                                  
-                };
-                Thread thread = new Thread(task);
+                Point2D pt;
+                pt = Main.canvas.getRoot().getDefaultInputManager().getCurrentCanvasPosition();
+                pt = Main.canvas.getCamera().localToView(pt);
+
+                Thread thread = new Thread(task(pt.getX(), pt.getY()));
                 thread.start(); 
 
+            }
+
+            private Runnable task(double x, double y) {
+                JFontChooser jFontChooser = new JFontChooser();
+                if(jFontChooser.showDialog(Main.m_Main) == 0) {
+                    String text = jFontChooser.text.getText();
+                    String font_name = jFontChooser.getSelectedFontFamily();
+                    int style = jFontChooser.getSelectedFontStyle();
+                    int size = jFontChooser.getSelectedFontSize();
+                    PText ptext = new PText();
+                    ptext.setText(text);
+                    size = (int)(size/Main.view_scale);
+                    Font font = new Font(font_name, style, size);
+                    ptext.setFont(font);
+                    ptext.addAttribute("text", text);
+                    ptext.setX(x);
+                    ptext.setY(y);
+                    ptext.addAttribute("size", size);
+                    Main.textCustomLayer.addChild(ptext);
+                    repaintText();
+                    Main.isChanged = true;
+                }
+                return null;
             }
         });        
     }
@@ -4671,25 +4674,27 @@ public class Utils {
                 System.out.println("image="+image);
                 String set_image_url = "https://" + Main.neb_server + ":" + Main.neb_server_port + "/set_image_nodes?area="+ControlPanel.area_select+"&node="+node+"&image="+image;
                 out = HTTPSRequestGET(set_image_url);
-                String[] mas = out.split("\n");
-                int i = 0;
-                for(String line : mas) {
-                    String[] mas1 = line.split(":");
-                    String area_out = shablon_to_colon(mas1[0]);
-                    String node_out = shablon_to_colon(mas1[1]);
-                    String image_out = shablon_to_colon(mas1[2]);
-                    if(ControlPanel.area_select.equals(area_out)) {
-                        if(i == 0) {
-                            if(!setImage(node_out, image_out, false)) {
-                                System.out.println("node "+node_out+" not set image!!!");
+                if(!out.equals("")) {
+                    String[] mas = out.split("\n");
+                    int i = 0;
+                    for (String line : mas) {
+                        String[] mas1 = line.split(":");
+                        String area_out = shablon_to_colon(mas1[0]);
+                        String node_out = shablon_to_colon(mas1[1]);
+                        String image_out = shablon_to_colon(mas1[2]);
+                        if (ControlPanel.area_select.equals(area_out)) {
+                            if (i == 0) {
+                                if (!setImage(node_out, image_out, false)) {
+                                    System.out.println("node " + node_out + " not set image!!!");
+                                }
+                            } else {
+                                if (!setImage(node_out, image_out, true)) {
+                                    System.out.println("node " + node_out + " not set image!!!");
+                                }
                             }
-                        } else {
-                            if(!setImage(node_out, image_out, true)) {
-                                System.out.println("node "+node_out+" not set image!!!");
-                            }                        
                         }
+                        i += 1;
                     }
-                    i += 1;
                 }
             }
         }

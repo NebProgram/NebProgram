@@ -16,11 +16,7 @@ import java.io.Console;
 import static java.lang.Math.abs;
 
 import java.nio.charset.StandardCharsets;
-import java.util.BitSet;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -33,7 +29,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Writer;
-import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.Buffer;
@@ -48,7 +43,7 @@ import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Collections;
+
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -64,13 +59,7 @@ import org.apache.lucene.store.FSDirectory;
 import static ru.kos.neb.neb_builder.Neb.DEBUG;
 import static ru.kos.neb.neb_builder.Neb.history_dir;
 import static ru.kos.neb.neb_builder.Neb.map_file;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.LinkedHashMap;
-import java.util.Random;
-import java.util.Scanner;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
@@ -109,33 +98,33 @@ public class Utils {
         }
         return result.toString();
     }
-    
+
     public Map reloadCfg(String cfg_file) {
         System.out.println("Reload neb.cfg file.");
-        Neb.logger.Println("Reload "+Neb.neb_cfg+" file.", Neb.logger.INFO);
+        Neb.logger.Println("Reload " + Neb.neb_cfg + " file.", Neb.logger.INFO);
         Map cfg = readConfig(cfg_file);
 //        Neb.history_map = (String) cfg.get("history_map");
 //        Neb.history_dir = Neb.history_map;
         String level_log = (String) cfg.get("level_log");
         if (level_log.equals("INFO")) {
-            ru.kos.neb.neb_lib.Utils.DEBUG=false;
+            ru.kos.neb.neb_lib.Utils.DEBUG = false;
             logger.SetLevel(logger.INFO);
             Neb.logger_user.SetLevel(Neb.logger_user.INFO);
         } else if (level_log.equals("DEBUG")) {
-            ru.kos.neb.neb_lib.Utils.DEBUG=true;
+            ru.kos.neb.neb_lib.Utils.DEBUG = true;
             logger.SetLevel(logger.DEBUG);
             Neb.logger_user.SetLevel(Neb.logger_user.DEBUG);
-        }        
+        }
         Neb.history_num_days = ((Long) cfg.get("history_num_days")).intValue();
         Neb.log_num_days = ((Long) cfg.get("log_num_days")).intValue();
 //        Neb.pause_fast_and_carefully_mac_scanning = ((Long) cfg.get("pause_fast_and_carefully_mac_scanning")).intValue();
 //        Neb.run_post_scripts = (String) cfg.get("postscript");
-        ArrayList<Long> included_port_tmp = (ArrayList)cfg.get("included_port");
-        for(Long port : included_port_tmp) {
+        ArrayList<Long> included_port_tmp = (ArrayList) cfg.get("included_port");
+        for (Long port : included_port_tmp) {
             Neb.included_port.add(port.intValue());
         }
-        ArrayList<Long> excluded_port_tmp = (ArrayList)cfg.get("excluded_port");
-        for(Long port : excluded_port_tmp) {
+        ArrayList<Long> excluded_port_tmp = (ArrayList) cfg.get("excluded_port");
+        for (Long port : excluded_port_tmp) {
             Neb.excluded_port.add(port.intValue());
         }
 //        Neb.ifaces_counters_extended = (ArrayList)cfg.get("ifaces_counters_extended");
@@ -412,14 +401,14 @@ public class Utils {
 //        
 //        return result;
 //    }    
-    
+
     public Map readNebMapFile(String map_file) {
         Map<String, Map> INFO = readJSONFile(map_file);
         for (Map.Entry<String, Map> entry : INFO.entrySet()) {
 //            String area = entry.getKey();
             Map<String, Map> val = entry.getValue();
             Map<String, ArrayList> node_protocol_accounts = val.get("node_protocol_accounts");
-            if(node_protocol_accounts != null && !node_protocol_accounts.isEmpty()) {
+            if (node_protocol_accounts != null && !node_protocol_accounts.isEmpty()) {
                 Map<String, String[]> node_protocol_accounts_new = new HashMap();
                 for (Map.Entry<String, ArrayList> entry1 : node_protocol_accounts.entrySet()) {
                     String node = entry1.getKey();
@@ -431,11 +420,11 @@ public class Utils {
                     node_protocol_accounts_new.put(node, mas);
                 }
                 val.put("node_protocol_accounts", node_protocol_accounts_new);
-            }        
+            }
         }
         return INFO;
     }
-    
+
     public Map readJSONFile(String filename) {
         Map result = new HashMap<>();
         File file = new File(filename);
@@ -495,7 +484,7 @@ public class Utils {
 
         for (String key : (Iterable<String>) object.keySet()) {
             Object value = object.get(key);
-            if(value != null) {
+            if (value != null) {
                 switch (value) {
                     case JSONArray jSONArray -> value = toList(jSONArray);
                     case JSONObject jSONObject -> value = toMap(jSONObject);
@@ -511,7 +500,7 @@ public class Utils {
     private List<Object> toList(JSONArray array) {
         List<Object> list = new ArrayList();
         for (Object value : array) {
-            if(value != null) {
+            if (value != null) {
                 switch (value) {
                     case JSONArray jSONArray -> value = toList(jSONArray);
                     case JSONObject jSONObject -> value = toMap(jSONObject);
@@ -545,13 +534,13 @@ public class Utils {
                 node_community_version_oid.add(mas);
             }
         }
-        
+
         WalkPool walkPool = new WalkPool();
         Map<String, ArrayList<String[]>> res1 = walkPool.get(node_community_version_oid, Neb.timeout_thread, timeout, retries);
-        
+
         ArrayList<String[]> node_community_version_oid1 = new ArrayList();
-        for(String[] iter : node_community_version_oid) {
-            if(res1.get(iter[0]) != null) {
+        for (String[] iter : node_community_version_oid) {
+            if (res1.get(iter[0]) != null) {
                 String[] mas = new String[3];
                 mas[0] = iter[0];
                 mas[1] = iter[1];
@@ -563,27 +552,27 @@ public class Utils {
                 mas[1] = iter[1];
                 mas[2] = iter[2];
                 mas[3] = "1.3.6.1.2.1.2.2.1.10";
-                node_community_version_oid1.add(mas);                
+                node_community_version_oid1.add(mas);
             }
         }
-        if(!node_community_version_oid1.isEmpty()) {
+        if (!node_community_version_oid1.isEmpty()) {
             Map<String, ArrayList<String[]>> res2 = walkPool.get(node_community_version_oid1, Neb.timeout_thread, timeout, retries);
-            for(String[] iter : node_community_version_oid1) {
-                if(res2.get(iter[0]) != null) {
+            for (String[] iter : node_community_version_oid1) {
+                if (res2.get(iter[0]) != null) {
                     String[] mas = new String[3];
                     mas[0] = iter[0];
                     mas[1] = iter[1];
-                    mas[2] = "1"; 
+                    mas[2] = "1";
                     result.add(mas);
                 }
-            }            
+            }
         }
-        
+
         // get sysDescription information 
         GetPool getPool = new GetPool();
         ArrayList<String> oid_list = new ArrayList();
         String sysDescr = ".1.3.6.1.2.1.1.1.0";
-        oid_list.add(sysDescr);        
+        oid_list.add(sysDescr);
         Map<String, ArrayList<String[]>> res = getPool.get(result, oid_list, Neb.timeout_thread, timeout, retries);
 
         // adding sysDescr to node_commenity_version
@@ -676,7 +665,7 @@ public class Utils {
 //        
 //        return result;
 //    }
-    
+
     private Map<String, Map<String, Map<String, String>>> indexingInterfacesFromNodes(Map<String, Map<String, ArrayList>> interfacesFromNodes) {
         Map<String, Map<String, Map<String, String>>> result = new HashMap();
 
@@ -703,40 +692,40 @@ public class Utils {
             }
             node_IfNameExtended.put(node, interface_name_extended);
         }
-        
+
         Map<String, Map<String, String>> node_id_ifDescr = new HashMap();
         for (Map.Entry<String, ArrayList> entry1 : interfacesFromNodes.get("ifDescr").entrySet()) {
             String node = entry1.getKey();
             ArrayList<String[]> val = entry1.getValue();
             Map<String, String> map_tmp = new HashMap();
-            for(String[] item : val) {
+            for (String[] item : val) {
                 String id = item[0].split("\\.")[item[0].split("\\.").length - 1];
                 map_tmp.put(id, item[1]);
             }
             node_id_ifDescr.put(node, map_tmp);
         }
         result.put("ifDescr", node_id_ifDescr);
-        
+
 //        Map<String, Map<String, String>> node_id_IfNameExtendedIfName = new HashMap();
         for (Map.Entry<String, ArrayList> entry1 : interfacesFromNodes.get("IfNameExtendedIfName").entrySet()) {
             String node = entry1.getKey();
             ArrayList<String[]> val = entry1.getValue();
-            if(node_IfNameExtended.get(node) != null && node_IfNameExtended.get(node)) {
+            if (node_IfNameExtended.get(node) != null && node_IfNameExtended.get(node)) {
                 Map<String, String> map_tmp = new HashMap();
-                for(String[] item : val) {
+                for (String[] item : val) {
                     String id = item[0].split("\\.")[item[0].split("\\.").length - 1];
                     map_tmp.put(id, item[1]);
                 }
                 node_id_ifDescr.put(node, map_tmp);
             }
         }
-        
+
         Map<String, Map<String, String>> node_id_IfaceMaping = new HashMap();
         for (Map.Entry<String, ArrayList> entry1 : interfacesFromNodes.get("IfaceMaping").entrySet()) {
             String node = entry1.getKey();
             ArrayList<String[]> val = entry1.getValue();
             Map<String, String> map_tmp = new HashMap();
-            for(String[] item : val) {
+            for (String[] item : val) {
                 String id = item[0].split("\\.")[item[0].split("\\.").length - 1];
                 map_tmp.put(id, item[1]);
             }
@@ -745,7 +734,7 @@ public class Utils {
         result.put("IfaceMaping", node_id_IfaceMaping);
         return result;
     }
-    
+
     //  output: node ---> iface_name ---> iface_id
     private Map<String, Map<String, String>> getNode_Ifaceid_Ifacename(ArrayList<String[]> node_community_version) {
         Map<String, Map<String, String>> result = new HashMap<>();
@@ -756,7 +745,7 @@ public class Utils {
         logger.Println("\tStart indexingInterfacesFromNodes ...", logger.DEBUG);
         Map<String, Map<String, Map<String, String>>> indexingInterfacesFromNodes = indexingInterfacesFromNodes(interfacesFromNodes);
         logger.Println("\tStop indexingInterfacesFromNodes.", logger.DEBUG);
-        
+
         for (Map.Entry<String, ArrayList> entry : interfacesFromNodes.get("ifIndex").entrySet()) {
             String node = entry.getKey();
             ArrayList<String[]> val_list = entry.getValue();
@@ -780,7 +769,7 @@ public class Utils {
             String node = item[0];
             String iface_id = item[1];
             String iface = item[2];
-            if(!iface_id.isEmpty()) {
+            if (!iface_id.isEmpty()) {
                 if (node_listiface_from_dplinks.get(node) != null) {
                     node_listiface_from_dplinks.get(node).put(iface_id, iface);
                 } else {
@@ -792,7 +781,7 @@ public class Utils {
             node = item[3];
             iface_id = item[4];
             iface = item[5];
-            if(!iface_id.isEmpty()) {
+            if (!iface_id.isEmpty()) {
                 if (node_listiface_from_dplinks.get(node) != null) {
                     node_listiface_from_dplinks.get(node).put(iface_id, iface);
                 } else {
@@ -807,9 +796,9 @@ public class Utils {
         long start_time = System.currentTimeMillis();
         Map<String, Map<String, ArrayList>> getWalkCountersFromNodes = getWalkCountersFromNodes(node_community_version);
         long stop_time = System.currentTimeMillis();
-        long delta = (stop_time-start_time)/1000;
+        long delta = (stop_time - start_time) / 1000;
 //        System.out.println("WalkCounters time: "+delta);
-        logger.Println("WalkCounters time: "+delta, logger.DEBUG);
+        logger.Println("WalkCounters time: " + delta, logger.DEBUG);
         //////// arraylist to map /////////////
         Map<String, Map<String, Map<String, String>>> walkCounters = new HashMap();
         for (Map.Entry<String, Map<String, ArrayList>> entry0 : getWalkCountersFromNodes.entrySet()) {
@@ -821,19 +810,19 @@ public class Utils {
                 Map<String, String> map_tmp = new HashMap();
                 for (String[] mas : val_list) {
                     String[] mas1 = mas[0].split("\\.");
-                    String id = mas1[mas1.length-1];
+                    String id = mas1[mas1.length - 1];
                     map_tmp.put(id, mas[1]);
                 }
-                map_tmp1.put(node, map_tmp);                
+                map_tmp1.put(node, map_tmp);
             }
             walkCounters.put(name, map_tmp1);
         }
-        
+
         //////////////////////////////////
         for (Map.Entry<String, ArrayList> entry : getWalkCountersFromNodes.get("ifIndex").entrySet()) {
             String node = entry.getKey();
             ArrayList<String[]> val_list = entry.getValue();
-            
+
 //            boolean iface_type_extended = false;
 //            if(nodes_information.get(node) != null && 
 //                    nodes_information.get(node).get("general") != null &&
@@ -846,39 +835,39 @@ public class Utils {
 //                    }
 //                }
 //            }            
-            
+
             Map<String, String[]> tmp = new HashMap<>();
             if (val_list.size() >= 3) {
                 for (String[] val : val_list) {
                     String id_iface = val[1];
                     String iface_name = "";
                     String id_iface_alt = null;
-                    if(walkCounters.get("ifDescr") != null && walkCounters.get("ifDescr").get(node) != null) {
+                    if (walkCounters.get("ifDescr") != null && walkCounters.get("ifDescr").get(node) != null) {
                         iface_name = walkCounters.get("ifDescr").get(node).get(id_iface);
                     }
-                    if(iface_name == null)
+                    if (iface_name == null)
                         iface_name = "";
 
-                    if(walkCounters.get("ifName") != null && walkCounters.get("ifName").get(node) != null) {
+                    if (walkCounters.get("ifName") != null && walkCounters.get("ifName").get(node) != null) {
                         for (Map.Entry<String, String> entry1 : walkCounters.get("ifName").get(node).entrySet()) {
                             String id = entry1.getKey();
                             String if_name = entry1.getValue();
-                            if(iface_name.contains(if_name)) {
+                            if (iface_name.contains(if_name)) {
 //                                if(if_name.equals(iface_name)) {
                                 id_iface_alt = id;
                                 break;
                             }
                         }
                     }
-                    
+
                     String[] out = new String[4];
                     out[0] = id_iface;
-                    if(walkCounters.get("ifOperStatus") != null && walkCounters.get("ifOperStatus").get(node) != null) {
+                    if (walkCounters.get("ifOperStatus") != null && walkCounters.get("ifOperStatus").get(node) != null) {
                         String iface_status = walkCounters.get("ifOperStatus").get(node).get(id_iface);
-                        if(iface_status != null && iface_status.equals("1")) {
-                            if(walkCounters.get("ifType") != null && walkCounters.get("ifType").get(node) != null) {
+                        if (iface_status != null && iface_status.equals("1")) {
+                            if (walkCounters.get("ifType") != null && walkCounters.get("ifType").get(node) != null) {
                                 String iface_type = walkCounters.get("ifType").get(node).get(id_iface);
-                                if(iface_type == null)
+                                if (iface_type == null)
                                     iface_type = "";
                                 if (iface_type.equals("6")) {
 //                                if (!iface_type.equals("53")) {
@@ -898,18 +887,18 @@ public class Utils {
                 result.put(node, tmp);
             }
         }
-        
+
         // filter counters
         Map<String, Map<String, String[]>> result_new = new HashMap();
         for (Map.Entry<String, Map<String, String[]>> entry : result.entrySet()) {
             String node = entry.getKey();
             Map<String, String[]> val = entry.getValue();
-            if(node_listiface_from_dplinks.get(node) != null) {
+            if (node_listiface_from_dplinks.get(node) != null) {
                 Map<String, String[]> val_new = new HashMap();
                 for (Map.Entry<String, String[]> entry1 : val.entrySet()) {
                     String id_iface = entry1.getKey();
                     String[] val1 = entry1.getValue();
-                    if(node_listiface_from_dplinks.get(node).get(id_iface) == null) {
+                    if (node_listiface_from_dplinks.get(node).get(id_iface) == null) {
                         val_new.put(id_iface, val1);
                     }
                 }
@@ -919,151 +908,151 @@ public class Utils {
             }
         }
         result = result_new;
-        
+
         return result;
     }
-    
-    String getInCounters(Map<String, Map<String, Map<String, String>>> walkCounters, 
-            String node, String id_iface, String id_iface_alt) {
+
+    String getInCounters(Map<String, Map<String, Map<String, String>>> walkCounters,
+                         String node, String id_iface, String id_iface_alt) {
         String ifInUcastPkts = "0";
-        if(walkCounters.get("ifHCInUcastPkts") != null && 
-                walkCounters.get("ifHCInUcastPkts").get(node) != null && 
+        if (walkCounters.get("ifHCInUcastPkts") != null &&
+                walkCounters.get("ifHCInUcastPkts").get(node) != null &&
                 walkCounters.get("ifHCInUcastPkts").get(node).get(id_iface) != null) {
             ifInUcastPkts = walkCounters.get("ifHCInUcastPkts").get(node).get(id_iface);
         } else {
-            if(id_iface_alt != null && walkCounters.get("ifHCInUcastPkts") != null && 
-                    walkCounters.get("ifHCInUcastPkts").get(node) != null && 
+            if (id_iface_alt != null && walkCounters.get("ifHCInUcastPkts") != null &&
+                    walkCounters.get("ifHCInUcastPkts").get(node) != null &&
                     walkCounters.get("ifHCInUcastPkts").get(node).get(id_iface_alt) != null) {
                 ifInUcastPkts = walkCounters.get("ifHCInUcastPkts").get(node).get(id_iface_alt);
-            } else if(walkCounters.get("ifInUcastPkts") != null && 
-                    walkCounters.get("ifInUcastPkts").get(node) != null && 
+            } else if (walkCounters.get("ifInUcastPkts") != null &&
+                    walkCounters.get("ifInUcastPkts").get(node) != null &&
                     walkCounters.get("ifInUcastPkts").get(node).get(id_iface) != null) {
                 ifInUcastPkts = walkCounters.get("ifInUcastPkts").get(node).get(id_iface);
             }
         }
         String ifInMulticastPkts = "0";
-        if(walkCounters.get("ifHCInMulticastPkts") != null && 
-                walkCounters.get("ifHCInMulticastPkts").get(node) != null && 
+        if (walkCounters.get("ifHCInMulticastPkts") != null &&
+                walkCounters.get("ifHCInMulticastPkts").get(node) != null &&
                 walkCounters.get("ifHCInMulticastPkts").get(node).get(id_iface) != null) {
             ifInMulticastPkts = walkCounters.get("ifHCInMulticastPkts").get(node).get(id_iface);
-        } else if(id_iface_alt != null && walkCounters.get("ifHCInMulticastPkts") != null && 
-                    walkCounters.get("ifHCInMulticastPkts").get(node) != null && 
-                    walkCounters.get("ifHCInMulticastPkts").get(node).get(id_iface_alt) != null) {
-                ifInMulticastPkts = walkCounters.get("ifHCInMulticastPkts").get(node).get(id_iface_alt);
-        }   
+        } else if (id_iface_alt != null && walkCounters.get("ifHCInMulticastPkts") != null &&
+                walkCounters.get("ifHCInMulticastPkts").get(node) != null &&
+                walkCounters.get("ifHCInMulticastPkts").get(node).get(id_iface_alt) != null) {
+            ifInMulticastPkts = walkCounters.get("ifHCInMulticastPkts").get(node).get(id_iface_alt);
+        }
         String ifInBroadcastPkts = "0";
-        if(walkCounters.get("ifHCInBroadcastPkts") != null && 
-                walkCounters.get("ifHCInBroadcastPkts").get(node) != null && 
+        if (walkCounters.get("ifHCInBroadcastPkts") != null &&
+                walkCounters.get("ifHCInBroadcastPkts").get(node) != null &&
                 walkCounters.get("ifHCInBroadcastPkts").get(node).get(id_iface) != null) {
             ifInBroadcastPkts = walkCounters.get("ifHCInBroadcastPkts").get(node).get(id_iface);
-        } else if(id_iface_alt != null && walkCounters.get("ifHCInBroadcastPkts") != null && 
-                    walkCounters.get("ifHCInBroadcastPkts").get(node) != null && 
-                    walkCounters.get("ifHCInBroadcastPkts").get(node).get(id_iface_alt) != null) {
-                ifInBroadcastPkts = walkCounters.get("ifHCInBroadcastPkts").get(node).get(id_iface_alt);
+        } else if (id_iface_alt != null && walkCounters.get("ifHCInBroadcastPkts") != null &&
+                walkCounters.get("ifHCInBroadcastPkts").get(node) != null &&
+                walkCounters.get("ifHCInBroadcastPkts").get(node).get(id_iface_alt) != null) {
+            ifInBroadcastPkts = walkCounters.get("ifHCInBroadcastPkts").get(node).get(id_iface_alt);
         }
         String ifInNUcastPkts = "0";
-        if(walkCounters.get("ifInNUcastPkts") != null && 
-                walkCounters.get("ifInNUcastPkts").get(node) != null && 
+        if (walkCounters.get("ifInNUcastPkts") != null &&
+                walkCounters.get("ifInNUcastPkts").get(node) != null &&
                 walkCounters.get("ifInNUcastPkts").get(node).get(id_iface) != null) {
             ifInNUcastPkts = walkCounters.get("ifInNUcastPkts").get(node).get(id_iface);
         }
         String ifInDiscards = "0";
-        if(walkCounters.get("ifInDiscards") != null && 
-                walkCounters.get("ifInDiscards").get(node) != null && 
+        if (walkCounters.get("ifInDiscards") != null &&
+                walkCounters.get("ifInDiscards").get(node) != null &&
                 walkCounters.get("ifInDiscards").get(node).get(id_iface) != null) {
             ifInDiscards = walkCounters.get("ifInDiscards").get(node).get(id_iface);
         }
         String ifInErrors = "0";
-        if(walkCounters.get("ifInErrors") != null && 
-                walkCounters.get("ifInErrors").get(node) != null && 
+        if (walkCounters.get("ifInErrors") != null &&
+                walkCounters.get("ifInErrors").get(node) != null &&
                 walkCounters.get("ifInErrors").get(node).get(id_iface) != null) {
             ifInErrors = walkCounters.get("ifInErrors").get(node).get(id_iface);
         }
         String res = ifInUcastPkts;
-        res = res+","+ifInMulticastPkts;
-        res = res+","+ifInBroadcastPkts;
-        res = res+","+ifInNUcastPkts;
-        res = res+","+ifInDiscards;
-        res = res+","+ifInErrors;
+        res = res + "," + ifInMulticastPkts;
+        res = res + "," + ifInBroadcastPkts;
+        res = res + "," + ifInNUcastPkts;
+        res = res + "," + ifInDiscards;
+        res = res + "," + ifInErrors;
         return res;
     }
 
-    String getOutCounters(Map<String, Map<String, Map<String, String>>> walkCounters, 
-            String node, String id_iface, String id_iface_alt) {
+    String getOutCounters(Map<String, Map<String, Map<String, String>>> walkCounters,
+                          String node, String id_iface, String id_iface_alt) {
         String ifOutUcastPkts = "0";
-        if(walkCounters.get("ifHCOutUcastPkts") != null && 
-                walkCounters.get("ifHCOutUcastPkts").get(node) != null && 
+        if (walkCounters.get("ifHCOutUcastPkts") != null &&
+                walkCounters.get("ifHCOutUcastPkts").get(node) != null &&
                 walkCounters.get("ifHCOutUcastPkts").get(node).get(id_iface) != null) {
             ifOutUcastPkts = walkCounters.get("ifHCOutUcastPkts").get(node).get(id_iface);
         } else {
-            if(id_iface_alt != null && walkCounters.get("ifHCOutUcastPkts") != null && 
-                    walkCounters.get("ifHCOutUcastPkts").get(node) != null && 
+            if (id_iface_alt != null && walkCounters.get("ifHCOutUcastPkts") != null &&
+                    walkCounters.get("ifHCOutUcastPkts").get(node) != null &&
                     walkCounters.get("ifHCOutUcastPkts").get(node).get(id_iface_alt) != null) {
                 ifOutUcastPkts = walkCounters.get("ifHCOutUcastPkts").get(node).get(id_iface_alt);
-            } else if(walkCounters.get("ifOutUcastPkts") != null && 
-                    walkCounters.get("ifOutUcastPkts").get(node) != null && 
+            } else if (walkCounters.get("ifOutUcastPkts") != null &&
+                    walkCounters.get("ifOutUcastPkts").get(node) != null &&
                     walkCounters.get("ifOutUcastPkts").get(node).get(id_iface) != null) {
                 ifOutUcastPkts = walkCounters.get("ifOutUcastPkts").get(node).get(id_iface);
             }
         }
         String ifOutMulticastPkts = "0";
-        if(walkCounters.get("ifHCOutMulticastPkts") != null && 
-                walkCounters.get("ifHCOutMulticastPkts").get(node) != null && 
+        if (walkCounters.get("ifHCOutMulticastPkts") != null &&
+                walkCounters.get("ifHCOutMulticastPkts").get(node) != null &&
                 walkCounters.get("ifHCOutMulticastPkts").get(node).get(id_iface) != null) {
             ifOutMulticastPkts = walkCounters.get("ifHCOutMulticastPkts").get(node).get(id_iface);
-        } else if(id_iface_alt != null && walkCounters.get("ifHCOutMulticastPkts") != null && 
-                    walkCounters.get("ifHCOutMulticastPkts").get(node) != null && 
-                    walkCounters.get("ifHCOutMulticastPkts").get(node).get(id_iface_alt) != null) {
-                ifOutMulticastPkts = walkCounters.get("ifHCOutMulticastPkts").get(node).get(id_iface_alt);
+        } else if (id_iface_alt != null && walkCounters.get("ifHCOutMulticastPkts") != null &&
+                walkCounters.get("ifHCOutMulticastPkts").get(node) != null &&
+                walkCounters.get("ifHCOutMulticastPkts").get(node).get(id_iface_alt) != null) {
+            ifOutMulticastPkts = walkCounters.get("ifHCOutMulticastPkts").get(node).get(id_iface_alt);
         }
         String ifOutBroadcastPkts = "0";
-        if(walkCounters.get("ifHCOutBroadcastPkts") != null && 
-                walkCounters.get("ifHCOutBroadcastPkts").get(node) != null && 
+        if (walkCounters.get("ifHCOutBroadcastPkts") != null &&
+                walkCounters.get("ifHCOutBroadcastPkts").get(node) != null &&
                 walkCounters.get("ifHCOutBroadcastPkts").get(node).get(id_iface) != null) {
             ifOutBroadcastPkts = walkCounters.get("ifHCOutBroadcastPkts").get(node).get(id_iface);
-        } else if(id_iface_alt != null && walkCounters.get("ifHCOutBroadcastPkts") != null && 
-                    walkCounters.get("ifHCOutBroadcastPkts").get(node) != null && 
-                    walkCounters.get("ifHCOutBroadcastPkts").get(node).get(id_iface_alt) != null) {
-                ifOutBroadcastPkts = walkCounters.get("ifHCOutBroadcastPkts").get(node).get(id_iface_alt);
+        } else if (id_iface_alt != null && walkCounters.get("ifHCOutBroadcastPkts") != null &&
+                walkCounters.get("ifHCOutBroadcastPkts").get(node) != null &&
+                walkCounters.get("ifHCOutBroadcastPkts").get(node).get(id_iface_alt) != null) {
+            ifOutBroadcastPkts = walkCounters.get("ifHCOutBroadcastPkts").get(node).get(id_iface_alt);
         }
         String ifOutNUcastPkts = "0";
-        if(walkCounters.get("ifOutNUcastPkts") != null && 
-                walkCounters.get("ifOutNUcastPkts").get(node) != null && 
+        if (walkCounters.get("ifOutNUcastPkts") != null &&
+                walkCounters.get("ifOutNUcastPkts").get(node) != null &&
                 walkCounters.get("ifOutNUcastPkts").get(node).get(id_iface) != null) {
             ifOutNUcastPkts = walkCounters.get("ifOutNUcastPkts").get(node).get(id_iface);
-        }        
+        }
         String ifOutDiscards = "0";
-        if(walkCounters.get("ifOutDiscards") != null && 
-                walkCounters.get("ifOutDiscards").get(node) != null && 
+        if (walkCounters.get("ifOutDiscards") != null &&
+                walkCounters.get("ifOutDiscards").get(node) != null &&
                 walkCounters.get("ifOutDiscards").get(node).get(id_iface) != null) {
             ifOutDiscards = walkCounters.get("ifOutDiscards").get(node).get(id_iface);
         }
         String ifOutErrors = "0";
-        if(walkCounters.get("ifOutErrors") != null && 
-                walkCounters.get("ifOutErrors").get(node) != null && 
+        if (walkCounters.get("ifOutErrors") != null &&
+                walkCounters.get("ifOutErrors").get(node) != null &&
                 walkCounters.get("ifOutErrors").get(node).get(id_iface) != null) {
             ifOutErrors = walkCounters.get("ifOutErrors").get(node).get(id_iface);
-        } 
+        }
         String res = ifOutUcastPkts;
-        res = res+","+ifOutMulticastPkts;
-        res = res+","+ifOutBroadcastPkts;
-        res = res+","+ifOutNUcastPkts;
-        res = res+","+ifOutDiscards;
-        res = res+","+ifOutErrors;
+        res = res + "," + ifOutMulticastPkts;
+        res = res + "," + ifOutBroadcastPkts;
+        res = res + "," + ifOutNUcastPkts;
+        res = res + "," + ifOutDiscards;
+        res = res + "," + ifOutErrors;
         return res;
     }
-    
+
     public double delta(double start, double stop) {
         double result = -1L;
 //        double MAX_VALUE32 = Math.pow(2, 32);
 //        double MAX_VALUE64 = Math.pow(2, 64);
-        
+
 //        if(start == 0 && stop == 0) {
 //            double rnd = Math.random()*MAX_VALUE64;
 ////            System.out.println("start="+start+" - stop="+stop+" --- result="+rnd);
 //            return rnd;
 //        }
-        if(start == 0 && stop == 0) {
+        if (start == 0 && stop == 0) {
             return 0;
         }
         double delta = stop - start;
@@ -1085,7 +1074,7 @@ public class Utils {
         ArrayList<ArrayList> result = new ArrayList();
         // normalize start_counters
         Map<String, Map<String, ArrayList>> start_counters_new = new HashMap();
-         for (Map.Entry<String, Map<String, String[]>> entry : start_counters.entrySet()) {
+        for (Map.Entry<String, Map<String, String[]>> entry : start_counters.entrySet()) {
             String node = entry.getKey();
             Map<String, String[]> val_list = entry.getValue();
             Map<String, ArrayList> val_list_new = new HashMap();
@@ -1096,24 +1085,24 @@ public class Utils {
                 list_counters.add(id_iface);
                 String[] mas_in = val[1].split(",");
                 double[] in = new double[mas_in.length];
-                for(int i = 0; i<mas_in.length; i++) {
+                for (int i = 0; i < mas_in.length; i++) {
                     in[i] = Double.parseDouble(mas_in[i]);
                 }
                 list_counters.add(in);
                 String[] mas_out = val[2].split(",");
                 double[] out = new double[mas_out.length];
-                for(int i = 0; i<mas_out.length; i++) {
+                for (int i = 0; i < mas_out.length; i++) {
                     out[i] = Double.parseDouble(mas_out[i]);
                 }
                 list_counters.add(out);
                 list_counters.add(val[3]);
                 val_list_new.put(id_iface, list_counters);
-            }    
+            }
             start_counters_new.put(node, val_list_new);
         }
         // normalize stop_counters
         Map<String, Map<String, ArrayList>> stop_counters_new = new HashMap();
-         for (Map.Entry<String, Map<String, String[]>> entry : stop_counters.entrySet()) {
+        for (Map.Entry<String, Map<String, String[]>> entry : stop_counters.entrySet()) {
             String node = entry.getKey();
             Map<String, String[]> val_list = entry.getValue();
             Map<String, ArrayList> val_list_new = new HashMap();
@@ -1124,23 +1113,22 @@ public class Utils {
                 list_counters.add(id_iface);
                 String[] mas_in = val[1].split(",");
                 double[] in = new double[mas_in.length];
-                for(int i = 0; i<mas_in.length; i++) {
+                for (int i = 0; i < mas_in.length; i++) {
                     in[i] = Double.parseDouble(mas_in[i]);
                 }
                 list_counters.add(in);
                 String[] mas_out = val[2].split(",");
                 double[] out = new double[mas_out.length];
-                for(int i = 0; i<mas_out.length; i++) {
+                for (int i = 0; i < mas_out.length; i++) {
                     out[i] = Double.parseDouble(mas_out[i]);
                 }
                 list_counters.add(out);
                 list_counters.add(val[3]);
                 val_list_new.put(id_iface, list_counters);
-            }    
+            }
             stop_counters_new.put(node, val_list_new);
-        }                
-                
-       
+        }
+
 
         for (Map.Entry<String, Map<String, ArrayList>> entry : start_counters_new.entrySet()) {
             String node = entry.getKey();
@@ -1148,13 +1136,13 @@ public class Utils {
             for (Map.Entry<String, ArrayList> entry1 : val_list.entrySet()) {
                 String id_iface = entry1.getKey();
                 ArrayList val1 = entry1.getValue();
-                double[] start_in = (double[])val1.get(1);
-                double[] start_out = (double[])val1.get(2);
+                double[] start_in = (double[]) val1.get(1);
+                double[] start_out = (double[]) val1.get(2);
                 if (stop_counters_new.get(node) != null) {
                     ArrayList val2 = stop_counters_new.get(node).get(id_iface);
                     if (val2 != null) {
-                        double[] stop_in = (double[])val2.get(1);
-                        double[] stop_out = (double[])val2.get(2);
+                        double[] stop_in = (double[]) val2.get(1);
+                        double[] stop_out = (double[]) val2.get(2);
                         double inUcast = delta(start_in[0], stop_in[0]);
                         double inMulticast = delta(start_in[1], stop_in[1]);
                         double inBroadcast = delta(start_in[2], stop_in[2]);
@@ -1167,55 +1155,55 @@ public class Utils {
                         double outNUcast = delta(start_out[3], stop_out[3]);
                         double out_discards = delta(start_out[4], stop_out[4]);
                         double out_errors = delta(start_out[5], stop_out[5]);
-                        
+
 //                        System.out.println(node+" - "+id_iface+":"+inUcast+","+inMulticast+","+inBroadcast+","+inNUcast+","+in_discards+","+in_errors+"|"+outUcast+","+outMulticast+","+outBroadcast+","+outNUcast+","+out_discards+","+out_errors);
-                        
+
                         double in = inUcast;
-                        if(inMulticast > 0) {
-                            in = in+inMulticast+inBroadcast;
+                        if (inMulticast > 0) {
+                            in = in + inMulticast + inBroadcast;
                         } else {
-                            in = in+inNUcast;
+                            in = in + inNUcast;
                         }
-                        in = in+in_discards;
-                        in = in+in_errors;
-                        if(in <= 0)
-                            in = Math.abs(Math.random()*Math.pow(2, 64));
-                        
+                        in = in + in_discards;
+                        in = in + in_errors;
+                        if (in <= 0)
+                            in = Math.abs(Math.random() * Math.pow(2, 64));
+
                         double in1 = inUcast;
-                        if(inMulticast > 0) {
-                            in1 = in1+inMulticast+inBroadcast;
+                        if (inMulticast > 0) {
+                            in1 = in1 + inMulticast + inBroadcast;
                         } else {
-                            in1 = in1+inNUcast;
+                            in1 = in1 + inNUcast;
                         }
-                        if(in1 <= 0)
-                            in1 = Math.abs(Math.random()*Math.pow(2, 64));
+                        if (in1 <= 0)
+                            in1 = Math.abs(Math.random() * Math.pow(2, 64));
 
                         double in2 = inUcast;
-                        if(in2 <= 0)
-                            in2 = Math.abs(Math.random()*Math.pow(2, 64));
-                        
+                        if (in2 <= 0)
+                            in2 = Math.abs(Math.random() * Math.pow(2, 64));
+
                         double out = outUcast;
-                        if(outMulticast > 0) {
-                            out = out+outMulticast+outBroadcast;
+                        if (outMulticast > 0) {
+                            out = out + outMulticast + outBroadcast;
                         } else {
-                            out = out+outNUcast;
+                            out = out + outNUcast;
                         }
-                        out = out-out_discards;
-                        out = out-out_errors;
-                        if(out <= 0)
-                            out = Math.abs(Math.random()*Math.pow(2, 64));
+                        out = out - out_discards;
+                        out = out - out_errors;
+                        if (out <= 0)
+                            out = Math.abs(Math.random() * Math.pow(2, 64));
                         double out1 = outUcast;
-                        if(outMulticast > 0) {
-                            out1 = out1+outMulticast+outBroadcast;
+                        if (outMulticast > 0) {
+                            out1 = out1 + outMulticast + outBroadcast;
                         } else {
-                            out1 = out1+outNUcast;
+                            out1 = out1 + outNUcast;
                         }
-                        if(out1 <= 0)
-                            out1 = Math.abs(Math.random()*Math.pow(2, 64));
+                        if (out1 <= 0)
+                            out1 = Math.abs(Math.random() * Math.pow(2, 64));
 
                         double out2 = outUcast;
-                        if(out2 <= 0)
-                            out2 = Math.abs(Math.random()*Math.pow(2, 64));                        
+                        if (out2 <= 0)
+                            out2 = Math.abs(Math.random() * Math.pow(2, 64));
 
                         ArrayList tmp = new ArrayList();
                         tmp.add(node);
@@ -1224,8 +1212,8 @@ public class Utils {
                         tmp.add(in);
                         tmp.add(out);
                         result.add(tmp);
-                        
-                        if(in_discards > 0 || in_errors > 0 || out_discards > 0 || out_errors > 0) {
+
+                        if (in_discards > 0 || in_errors > 0 || out_discards > 0 || out_errors > 0) {
                             ArrayList tmp1 = new ArrayList();
                             tmp1.add(node);
                             tmp1.add(id_iface);
@@ -1234,9 +1222,9 @@ public class Utils {
                             tmp1.add(out1);
                             result.add(tmp1);
                         }
-                        
-                        if(inMulticast > 0 || inBroadcast > 0 || inNUcast > 0 || 
-                            outMulticast > 0 || outBroadcast > 0 || outNUcast > 0) {
+
+                        if (inMulticast > 0 || inBroadcast > 0 || inNUcast > 0 ||
+                                outMulticast > 0 || outBroadcast > 0 || outNUcast > 0) {
                             ArrayList tmp2 = new ArrayList();
                             tmp2.add(node);
                             tmp2.add(id_iface);
@@ -1254,8 +1242,8 @@ public class Utils {
     }
 
     public Map<String, ArrayList<ArrayList<String>>> getCalculateLinks(Map<String, Map> informationFromNodesAllAreas,
-            Map<String, ArrayList<String[]>> area_node_community_version_dp,
-            int pause, int pause_test, double precession_limit, int retries_testing, int limit_retries_testing) {
+                                                                       Map<String, ArrayList<String[]>> area_node_community_version_dp,
+                                                                       int pause, int pause_test, double precession_limit, int retries_testing, int limit_retries_testing) {
         // check needed calculate links
         Map<String, Boolean> next_counters_links_areas = new HashMap();
         for (Map.Entry<String, Map> area : informationFromNodesAllAreas.entrySet()) {
@@ -1273,16 +1261,16 @@ public class Utils {
                         node_in_links.put(item.get(3), item.get(3));
                     }
                 }
-                
+
                 boolean find = true;
-                for(Map.Entry<String, Map> entry : node_protocol_accounts.entrySet()) {
+                for (Map.Entry<String, Map> entry : node_protocol_accounts.entrySet()) {
                     String node = entry.getKey();
-                    if(node_in_links.get(node) == null) {
+                    if (node_in_links.get(node) == null) {
                         find = false;
                         break;
                     }
                 }
-                if(!find) {
+                if (!find) {
                     next_counters_links_areas.put(area_name, true);
                 } else {
                     next_counters_links_areas.put(area_name, false);
@@ -1297,7 +1285,7 @@ public class Utils {
             String area_name = area.getKey();
             Map val = area.getValue();
             if (next_counters_links_areas.get(area_name) != null && next_counters_links_areas.get(area_name)) {
-                Map<String, Map> nodes_information = (Map)val.get("nodes_information");
+                Map<String, Map> nodes_information = (Map) val.get("nodes_information");
                 ArrayList<String[]> node_community_version_area = area_node_community_version_dp.get(area_name);
                 if (node_community_version_area != null && node_community_version_area.size() > 1) {
                     logger.Println("Start get counters area " + area_name + " ...", logger.INFO);
@@ -1321,14 +1309,15 @@ public class Utils {
                 }
             }
         }
-        if(DEBUG) mapToFile(start_counters, Neb.debug_folder+"/start_counters", Neb.DELAY_WRITE_FILE);
+        if (DEBUG) mapToFile(start_counters, Neb.debug_folder + "/start_counters", Neb.DELAY_WRITE_FILE);
 ///////////////////////////////////////////////
-        if(!start_counters.isEmpty()) {
+        if (!start_counters.isEmpty()) {
             long start_time = System.currentTimeMillis();
             Map<String, ArrayList<String[]>> area_node_community_version = getAreaNodeCommunityVersion(informationFromNodesAllAreas);
 
             Neb.area_arp_mac_table = getArpMac(area_node_community_version);
-            if(DEBUG) utils.mapToFile(Neb.area_arp_mac_table, Neb.debug_folder+"/area_arp_mac_table", Neb.DELAY_WRITE_FILE);
+            if (DEBUG)
+                utils.mapToFile(Neb.area_arp_mac_table, Neb.debug_folder + "/area_arp_mac_table", Neb.DELAY_WRITE_FILE);
             long stop_time = System.currentTimeMillis();
             long arp_mac_run_time = (stop_time - start_time) / 1000;
             if (pause - arp_mac_run_time > 0) {
@@ -1341,7 +1330,7 @@ public class Utils {
             String area_name = area.getKey();
             Map val = area.getValue();
             if (next_counters_links_areas.get(area_name) != null && next_counters_links_areas.get(area_name)) {
-                Map<String, Map> nodes_information = (Map)val.get("nodes_information");
+                Map<String, Map> nodes_information = (Map) val.get("nodes_information");
                 ArrayList<String[]> node_community_version_area = area_node_community_version_dp.get(area_name);
                 if (node_community_version_area != null && node_community_version_area.size() > 1) {
                     logger.Println("Start get counters area " + area_name + " ...", logger.INFO);
@@ -1365,7 +1354,7 @@ public class Utils {
                 }
             }
         }
-        if(DEBUG) mapToFile(stop_counters, Neb.debug_folder+"/stop_counters", Neb.DELAY_WRITE_FILE);
+        if (DEBUG) mapToFile(stop_counters, Neb.debug_folder + "/stop_counters", Neb.DELAY_WRITE_FILE);
 
         Map<String, ArrayList<ArrayList>> deltaCounters = new HashMap();
         for (Map.Entry<String, Map<String, Map<String, String[]>>> area : start_counters.entrySet()) {
@@ -1379,30 +1368,30 @@ public class Utils {
             }
         }
         // write to file deltaCounters
-        if(DEBUG) mapToFile(deltaCounters, Neb.debug_folder+"/deltaCounters", Neb.DELAY_WRITE_FILE);
-        
+        if (DEBUG) mapToFile(deltaCounters, Neb.debug_folder + "/deltaCounters", Neb.DELAY_WRITE_FILE);
+
         Map<String, ArrayList<String[]>> links_calculate = new HashMap();
         for (Map.Entry<String, ArrayList<ArrayList>> area : deltaCounters.entrySet()) {
             String area_name = area.getKey();
             ArrayList<ArrayList> deltaCounters_list = area.getValue();
-            logger.Println(area_name+" - start CalculateLinks ...", logger.INFO);
-            double min_packets = (double) pause /10;
+            logger.Println(area_name + " - start CalculateLinks ...", logger.INFO);
+            double min_packets = (double) pause / 10;
             ArrayList<String[]> links_area = calculateLinks(deltaCounters_list, precession_limit, min_packets);
             links_calculate.put(area_name, links_area);
-            logger.Println(area_name+" - stop CalculateLinks.", logger.INFO);
+            logger.Println(area_name + " - stop CalculateLinks.", logger.INFO);
         }
-        
+
         // replace "null" to null
         Map<String, ArrayList<String[]>> links_calculate_new = new HashMap();
         for (Map.Entry<String, ArrayList<String[]>> entry : links_calculate.entrySet()) {
             String area = entry.getKey();
             ArrayList<String[]> val = entry.getValue();
             ArrayList<String[]> val_new = new ArrayList();
-            for(String[] it : val) {
+            for (String[] it : val) {
                 String[] it_new = new String[it.length];
                 int i = 0;
-                for(String it1 : it) {
-                    if(it1 != null && it1.equals("null")) {
+                for (String it1 : it) {
+                    if (it1 != null && it1.equals("null")) {
 //                        logger.Println("Replace null str: " + it[0] + ", " + it[1] + ", " + it[2] + " <--->" + it[3] + ", " + it[4] + ", " + it[5] , logger.DEBUG);
                         it1 = null;
                     }
@@ -1416,16 +1405,16 @@ public class Utils {
         links_calculate = links_calculate_new;
 
         // write to file links_calculate
-        if(DEBUG) mapToFile(links_calculate, Neb.debug_folder+"/links_calculate", Neb.DELAY_WRITE_FILE);
+        if (DEBUG) mapToFile(links_calculate, Neb.debug_folder + "/links_calculate", Neb.DELAY_WRITE_FILE);
 
         // append Base Mac addres from ARP_MAC_Table
         logger.Println("Start append Base Mac addres from ARP_MAC_Table...", logger.DEBUG);
         informationFromNodesAllAreas = utils.appendMacFromArpMacTable(informationFromNodesAllAreas, Neb.area_arp_mac_table);
         logger.Println("Stop append Base Mac addres from ARP_MAC_Table.", logger.DEBUG);
 //        if(DEBUG) mapToFile((Map) informationFromNodesAllAreas, Neb.debug_folder+"/Info_append_mac", Neb.DELAY_WRITE_FILE);
-        
+
         Map<String, ArrayList<ArrayList<String>>> area_links_calculate = new HashMap();
-        if(!links_calculate.isEmpty()) {
+        if (!links_calculate.isEmpty()) {
             Map<String, ArrayList<String[]>>[] testingLinks = new HashMap[retries_testing];
             for (int n = 0; n < retries_testing; n++) {
                 testingLinks[n] = new HashMap();
@@ -1439,7 +1428,7 @@ public class Utils {
                     ArrayList<String[]> node_community_version_area = area_node_community_version_dp.get(area_name);
                     if (links_calculate_area != null && !links_calculate_area.isEmpty() && node_community_version_area != null && !node_community_version_area.isEmpty()) {
                         Map<String, String[]> node_community_version_map = new HashMap();
-                        for(String[] item : node_community_version_area) {
+                        for (String[] item : node_community_version_area) {
                             node_community_version_map.put(item[0], item);
                         }
                         ArrayList<String[]> links = new ArrayList();
@@ -1451,16 +1440,16 @@ public class Utils {
                             mas[3] = list[3];
                             mas[4] = list[4];
                             mas[5] = list[5];
-    //                        logger.Println("Prepare link for testing = " + mas[0] + ", " + mas[1] + ", " + mas[2] + " <--->" + mas[3] + ", " + mas[4] + ", " + mas[5], logger.DEBUG);
+                            //                        logger.Println("Prepare link for testing = " + mas[0] + ", " + mas[1] + ", " + mas[2] + " <--->" + mas[3] + ", " + mas[4] + ", " + mas[5], logger.DEBUG);
                             links.add(mas);
                         }
-    //                    logger.Println("Prepare link for testing size = " + links.size(), logger.DEBUG);
+                        //                    logger.Println("Prepare link for testing size = " + links.size(), logger.DEBUG);
 
-                        logger.Println("Start get counters for testing links area " + area_name + " size="+links.size()+" ...", logger.INFO);
+                        logger.Println("Start get counters for testing links area " + area_name + " size=" + links.size() + " ...", logger.INFO);
                         ArrayList<String[]> testingLinks_start = getCountersTestingLinks(links, node_community_version_map);
                         testingLinks_start_map.put(area_name, testingLinks_start);
                         logger.Println("Stop get counters for testing links area " + area_name + ".", logger.INFO);
-                        writeArrayListToFile(Neb.debug_folder+"/"+"testingLinks_start_"+area_name+"_"+ ii, testingLinks_start);
+                        writeArrayListToFile(Neb.debug_folder + "/" + "testingLinks_start_" + area_name + "_" + ii, testingLinks_start);
                     }
                 }
 
@@ -1473,9 +1462,9 @@ public class Utils {
                     ArrayList<String[]> node_community_version_area = area_node_community_version_dp.get(area_name);
                     if (links_calculate_area != null && !links_calculate_area.isEmpty() && node_community_version_area != null && !node_community_version_area.isEmpty()) {
                         Map<String, String[]> node_community_version_map = new HashMap();
-                        for(String[] item : node_community_version_area) {
+                        for (String[] item : node_community_version_area) {
                             node_community_version_map.put(item[0], item);
-                        }                    
+                        }
                         ArrayList<String[]> links = new ArrayList();
                         for (String[] list : links_calculate_area) {
                             String[] mas = new String[6];
@@ -1487,13 +1476,13 @@ public class Utils {
                             mas[5] = list[5];
                             links.add(mas);
                         }
-    //                    logger.Println("Prepare link for testing size = " + links.size(), logger.DEBUG);
+                        //                    logger.Println("Prepare link for testing size = " + links.size(), logger.DEBUG);
 
-                        logger.Println("Start get counters for testing links area " + area_name + " size="+links.size()+ " ...", logger.INFO);
+                        logger.Println("Start get counters for testing links area " + area_name + " size=" + links.size() + " ...", logger.INFO);
                         ArrayList<String[]> testingLinks_stop = getCountersTestingLinks(links, node_community_version_map);
                         testingLinks_stop_map.put(area_name, testingLinks_stop);
                         logger.Println("Stop get counters for testing links area " + area_name + ".", logger.INFO);
-                        writeArrayListToFile(Neb.debug_folder+"/"+"testingLinks_stop_"+area_name+"_"+ ii, testingLinks_stop);
+                        writeArrayListToFile(Neb.debug_folder + "/" + "testingLinks_stop_" + area_name + "_" + ii, testingLinks_stop);
                     }
                 }
 
@@ -1520,14 +1509,14 @@ public class Utils {
             for (int ii = 0; ii < retries_testing; ii++) {
                 for (Map.Entry<String, ArrayList<String[]>> entry : testingLinks[ii].entrySet()) {
                     String area_name = entry.getKey();
-                    if(area_links_tmp.get(area_name) == null) {
+                    if (area_links_tmp.get(area_name) == null) {
                         Map<String, String[]> links_map = new HashMap();
-                        area_links_tmp.put(area_name, links_map);                
+                        area_links_tmp.put(area_name, links_map);
                     }
                     ArrayList<String[]> val = entry.getValue();
                     for (String[] link : val) {
-                        String key = link[0]+" "+link[1]+" "+link[3]+" "+link[4];
-                        if(area_links_tmp.get(area_name).get(key) != null) {
+                        String key = link[0] + " " + link[1] + " " + link[3] + " " + link[4];
+                        if (area_links_tmp.get(area_name).get(key) != null) {
                             String[] link1 = area_links_tmp.get(area_name).get(key);
                             link1[6] = String.valueOf(Double.parseDouble(link1[6]) + Double.parseDouble(link[6]));
                             link1[8] = String.valueOf(Integer.parseInt(link1[8]) + 1);
@@ -1557,7 +1546,7 @@ public class Utils {
                 for (Map.Entry<String, String[]> entry1 : val.entrySet()) {
                     links.add(entry1.getValue());
                 }
-                if(!links.isEmpty())
+                if (!links.isEmpty())
                     area_calc_links.put(area_name, links);
             }
 
@@ -1565,9 +1554,9 @@ public class Utils {
 //                String area_name = entry.getKey();
                 ArrayList<String[]> val = entry.getValue();
                 for (String[] link : val) {
-                    link[6] = String.valueOf(Double.parseDouble(link[6])/Integer.parseInt(link[8]));
+                    link[6] = String.valueOf(Double.parseDouble(link[6]) / Integer.parseInt(link[8]));
                 }
-            }    
+            }
 
             Map<String, ArrayList<String[]>> links_from_counters = new HashMap();
             for (Map.Entry<String, ArrayList<String[]>> entry : area_calc_links.entrySet()) {
@@ -1597,7 +1586,7 @@ public class Utils {
             //////////////////////
             for (Map.Entry<String, Map> area : informationFromNodesAllAreas.entrySet()) {
                 String area_name = area.getKey();
-    //            Map val = area.getValue();
+                //            Map val = area.getValue();
                 ArrayList<String[]> links_calculate_area = links_from_counters.get(area_name);
                 ArrayList<ArrayList<String>> links_calculate_list = new ArrayList();
                 if (links_calculate_area != null) {
@@ -1631,10 +1620,10 @@ public class Utils {
                 for (ArrayList<String> link : val) {
                     String node1 = link.get(0);
                     String id1 = link.get(1);
-                    if(id1.matches("\\d+") && 
-                        Neb.area_node_ifaceid_ifacename.get(area_name) != null && 
-                        Neb.area_node_ifaceid_ifacename.get(area_name).get(node1) != null &&
-                        Neb.area_node_ifaceid_ifacename.get(area_name).get(node1).get(id1) != null) {
+                    if (id1.matches("\\d+") &&
+                            Neb.area_node_ifaceid_ifacename.get(area_name) != null &&
+                            Neb.area_node_ifaceid_ifacename.get(area_name).get(node1) != null &&
+                            Neb.area_node_ifaceid_ifacename.get(area_name).get(node1).get(id1) != null) {
                         String iface_name = Neb.area_node_ifaceid_ifacename.get(area_name).get(node1).get(id1);
                         link.set(2, iface_name);
                     } else {
@@ -1642,22 +1631,22 @@ public class Utils {
                     }
                     String node2 = link.get(3);
                     String id2 = link.get(4);
-                    if(id2.matches("\\d+") && 
-                        Neb.area_node_ifaceid_ifacename.get(area_name) != null && 
-                        Neb.area_node_ifaceid_ifacename.get(area_name).get(node2) != null &&
-                        Neb.area_node_ifaceid_ifacename.get(area_name).get(node2).get(id2) != null) {
+                    if (id2.matches("\\d+") &&
+                            Neb.area_node_ifaceid_ifacename.get(area_name) != null &&
+                            Neb.area_node_ifaceid_ifacename.get(area_name).get(node2) != null &&
+                            Neb.area_node_ifaceid_ifacename.get(area_name).get(node2).get(id2) != null) {
                         String iface_name = Neb.area_node_ifaceid_ifacename.get(area_name).get(node2).get(id2);
                         link.set(5, iface_name);
                     } else {
                         link.set(5, "unknown");
-                    }                
+                    }
                 }
             }
         }
-        
+
         // write to file links_calculate
-        if(DEBUG) mapToFile(area_links_calculate, Neb.debug_folder+"/area_links_calculate", Neb.DELAY_WRITE_FILE);
-        
+        if (DEBUG) mapToFile(area_links_calculate, Neb.debug_folder + "/area_links_calculate", Neb.DELAY_WRITE_FILE);
+
         // get trusted links
         Map<String, Map<String, ArrayList<String>>> links_calculate_prev_count = utils.readJSONFile(Neb.links_calculate_prev_count_file);
         Map<String, Map<String, ArrayList<String>>> map_links_calculate_prev_count = new HashMap();
@@ -1676,25 +1665,23 @@ public class Utils {
         for (Map.Entry<String, ArrayList<ArrayList<String>>> entry : area_links_calculate.entrySet()) {
             String area_name = entry.getKey();
             ArrayList<ArrayList<String>> links = entry.getValue();
-            for(ArrayList<String> link : links) {
-                String key1 = link.get(0)+","+link.get(1)+","+link.get(2)+","+link.get(3)+","+link.get(4)+","+link.get(5);
-                String key2 = link.get(3)+","+link.get(4)+","+link.get(5)+","+link.get(0)+","+link.get(1)+","+link.get(2);
-                if(map_links_calculate_prev_count.get(area_name) != null && 
+            for (ArrayList<String> link : links) {
+                String key1 = link.get(0) + "," + link.get(1) + "," + link.get(2) + "," + link.get(3) + "," + link.get(4) + "," + link.get(5);
+                String key2 = link.get(3) + "," + link.get(4) + "," + link.get(5) + "," + link.get(0) + "," + link.get(1) + "," + link.get(2);
+                if (map_links_calculate_prev_count.get(area_name) != null &&
                         map_links_calculate_prev_count.get(area_name).get(key1) != null) {
                     int count = Integer.parseInt(map_links_calculate_prev_count.get(area_name).get(key1).get(8));
                     count += 1;
                     map_links_calculate_prev_count.get(area_name).get(key1).set(8, String.valueOf(count));
-                }
-                else if(map_links_calculate_prev_count.get(area_name) != null && 
+                } else if (map_links_calculate_prev_count.get(area_name) != null &&
                         map_links_calculate_prev_count.get(area_name).get(key2) != null) {
                     int count = Integer.parseInt(map_links_calculate_prev_count.get(area_name).get(key2).get(8));
                     count += 1;
                     map_links_calculate_prev_count.get(area_name).get(key2).set(8, String.valueOf(count));
-                }
-                else {
-                    ArrayList<String> links1 = (ArrayList)link.clone();
+                } else {
+                    ArrayList<String> links1 = (ArrayList) link.clone();
                     links1.set(8, "1");
-                    if(map_links_calculate_prev_count.get(area_name) != null) {
+                    if (map_links_calculate_prev_count.get(area_name) != null) {
                         map_links_calculate_prev_count.get(area_name).put(key1, links1);
                     } else {
                         Map<String, ArrayList<String>> map_links_calculate_prev_count_area = new HashMap();
@@ -1704,7 +1691,7 @@ public class Utils {
                 }
             }
         }
-        
+
         // remove link 
         Map<String, Map<String, ArrayList<String>>> map_links_calculate = new HashMap();
         for (Map.Entry<String, ArrayList<ArrayList<String>>> entry : area_links_calculate.entrySet()) {
@@ -1712,8 +1699,8 @@ public class Utils {
             ArrayList<ArrayList<String>> links = entry.getValue();
             Map<String, ArrayList<String>> map_links_calculate_area = new HashMap();
             for (ArrayList<String> link : links) {
-                String key1 = link.get(0)+","+link.get(1)+","+link.get(2)+","+link.get(3)+","+link.get(4)+","+link.get(5);
-                String key2 = link.get(3)+","+link.get(4)+","+link.get(5)+","+link.get(0)+","+link.get(1)+","+link.get(2);
+                String key1 = link.get(0) + "," + link.get(1) + "," + link.get(2) + "," + link.get(3) + "," + link.get(4) + "," + link.get(5);
+                String key2 = link.get(3) + "," + link.get(4) + "," + link.get(5) + "," + link.get(0) + "," + link.get(1) + "," + link.get(2);
                 map_links_calculate_area.put(key1, link);
                 map_links_calculate_area.put(key2, link);
             }
@@ -1727,13 +1714,13 @@ public class Utils {
             for (Map.Entry<String, ArrayList<String>> entry1 : val.entrySet()) {
                 String key = entry1.getKey();
                 ArrayList<String> link = entry1.getValue();
-                if(map_links_calculate.get(area_name) != null && map_links_calculate.get(area_name).get(key) != null) {
+                if (map_links_calculate.get(area_name) != null && map_links_calculate.get(area_name).get(key) != null) {
                     val_new.put(key, link);
                 }
             }
             map_links_calculate_prev_count.put(area_name, val_new);
         }
-    
+
         utils.mapToFile(map_links_calculate_prev_count, Neb.links_calculate_prev_count_file, Neb.DELAY_WRITE_FILE);
 
         Map<String, Map<String, String>> trust_calculate_links = new HashMap();
@@ -1744,25 +1731,25 @@ public class Utils {
             for (Map.Entry<String, ArrayList<String>> entry1 : val.entrySet()) {
                 String key = entry1.getKey();
                 ArrayList<String> link = entry1.getValue();
-                if(Integer.parseInt(link.get(8)) >= Neb.links_calculate_prev_history) {
+                if (Integer.parseInt(link.get(8)) >= Neb.links_calculate_prev_history) {
                     trust_calculate_links_area.put(key, key);
                 }
             }
-            if(!trust_calculate_links_area.isEmpty())
+            if (!trust_calculate_links_area.isEmpty())
                 trust_calculate_links.put(area_name, trust_calculate_links_area);
-        }        
-        
+        }
+
         // arp mac checking calculate links
         Map<String, Map> area_node_mac = utils.getAreaNodeMac(informationFromNodesAllAreas);
         logger.Println("Start get area_node_mac_connected_neighbours_mac ...", logger.DEBUG);
         Map<String, Map> topology = utils.getTopology(informationFromNodesAllAreas);
         Map<String, Map> area_node_mac_connected_neighbours_mac = getConnectedNeighboursMac(topology, Neb.area_arp_mac_table);
         logger.Println("Stop get area_node_mac_connected_neighbours_mac.", logger.DEBUG);
-                
+
         for (Map.Entry<String, ArrayList<ArrayList<String>>> entry : area_links_calculate.entrySet()) {
             String area_name = entry.getKey();
             Map<String, Map> node_mac_connected_neighbours = area_node_mac_connected_neighbours_mac.get(area_name);
-            if(area_node_mac.get(area_name) != null && node_mac_connected_neighbours != null) {
+            if (area_node_mac.get(area_name) != null && node_mac_connected_neighbours != null) {
                 ArrayList<ArrayList<String>> links = entry.getValue();
 //                // get concurent links
 //                Map<String, ArrayList<ArrayList<String>>> concurent_links = new HashMap();
@@ -1801,38 +1788,37 @@ public class Utils {
 //                }
 //                concurent_links = concurent_links_new;
 
-                ArrayList<ArrayList<String>> links_new = new ArrayList(); 
-                for(ArrayList<String> link : links) {
+                ArrayList<ArrayList<String>> links_new = new ArrayList();
+                for (ArrayList<String> link : links) {
 //                    String key1 = link.get(0)+","+link.get(1)+","+link.get(2);
 //                    String key2 = link.get(3)+","+link.get(4)+","+link.get(5);
-                    String key1_full = link.get(0)+","+link.get(1)+","+link.get(2)+","+link.get(3)+","+link.get(4)+","+link.get(5);
-                    String key2_full = link.get(3)+","+link.get(4)+","+link.get(5)+","+link.get(0)+","+link.get(1)+","+link.get(2);                    
-                    if(
-                        (trust_calculate_links.get(area_name) != null && 
-                            trust_calculate_links.get(area_name).get(key1_full) != null) ||
-                        (trust_calculate_links.get(area_name) != null && 
-                            trust_calculate_links.get(area_name).get(key2_full) != null)                            
+                    String key1_full = link.get(0) + "," + link.get(1) + "," + link.get(2) + "," + link.get(3) + "," + link.get(4) + "," + link.get(5);
+                    String key2_full = link.get(3) + "," + link.get(4) + "," + link.get(5) + "," + link.get(0) + "," + link.get(1) + "," + link.get(2);
+                    if (
+                            (trust_calculate_links.get(area_name) != null &&
+                                    trust_calculate_links.get(area_name).get(key1_full) != null) ||
+                                    (trust_calculate_links.get(area_name) != null &&
+                                            trust_calculate_links.get(area_name).get(key2_full) != null)
                     ) {
-                        logger.Println(link.get(0)+" "+link.get(2)+" <---> "+link.get(3)+" "+link.get(5)+" OK.", logger.DEBUG);
-                        links_new.add(link);                    
-                    }                    
-                    else if(check_Link_through_node_mac_connected_neighbours_mac(link, node_mac_connected_neighbours, area_node_mac.get(area_name))) {
-                        logger.Println(link.get(0)+" "+link.get(2)+" <---> "+link.get(3)+" "+link.get(5)+" OK.", logger.DEBUG);
+                        logger.Println(link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + " OK.", logger.DEBUG);
+                        links_new.add(link);
+                    } else if (check_Link_through_node_mac_connected_neighbours_mac(link, node_mac_connected_neighbours, area_node_mac.get(area_name))) {
+                        logger.Println(link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + " OK.", logger.DEBUG);
                         links_new.add(link);
                     } else {
-                        logger.Println(link.get(0)+" "+link.get(2)+" <---> "+link.get(3)+" "+link.get(5)+" ERR!!!", logger.DEBUG);
+                        logger.Println(link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + " ERR!!!", logger.DEBUG);
                     }
                 }
                 area_links_calculate.put(area_name, links_new);
             }
         }
-        mapToFile(area_links_calculate, Neb.debug_folder+"/area_links_calculate_check_arp_mac", Neb.DELAY_WRITE_FILE);
-        
+        mapToFile(area_links_calculate, Neb.debug_folder + "/area_links_calculate_check_arp_mac", Neb.DELAY_WRITE_FILE);
+
         // get uniqal calculate links
         Map<String, ArrayList<ArrayList<String>>> area_links_calculate_uniqal = new HashMap();
         for (Map.Entry<String, ArrayList<ArrayList<String>>> area : area_links_calculate.entrySet()) {
             String area_name = area.getKey();
-            System.out.println(area_name);
+//            System.out.println(area_name);
             ArrayList<ArrayList<String>> val = area.getValue();
             // sorting for precession
             val.sort((ArrayList<String> o1, ArrayList<String> o2) -> {
@@ -1841,9 +1827,9 @@ public class Utils {
                 return Double.parseDouble(o1.get(6)) < Double.parseDouble(o2.get(6)) ? -1 : 1;
             });
             ArrayList<ArrayList<String>> links_calculate_uniqal = new ArrayList();
-            for(ArrayList<String> link : val) {
+            for (ArrayList<String> link : val) {
                 boolean found = false;
-                for(ArrayList<String> link_uniq : links_calculate_uniqal) {
+                for (ArrayList<String> link_uniq : links_calculate_uniqal) {
                     if (link.get(0).equals(link_uniq.get(0)) && link.get(1).equals(link_uniq.get(1)) ||
                             link.get(3).equals(link_uniq.get(3)) && link.get(4).equals(link_uniq.get(4)) ||
                             link.get(0).equals(link_uniq.get(3)) && link.get(1).equals(link_uniq.get(4)) ||
@@ -1853,23 +1839,24 @@ public class Utils {
                         break;
                     }
                 }
-                if(!found) {
+                if (!found) {
                     links_calculate_uniqal.add(link);
-                    logger.Println("Add link: " + link.get(0)+", "+link.get(1)+" <---> "+link.get(3)+", "+link.get(4), logger.DEBUG);
+                    logger.Println("Add link: " + link.get(0) + ", " + link.get(1) + " <---> " + link.get(3) + ", " + link.get(4), logger.DEBUG);
                 } else {
-                    logger.Println("Delete link: " + link.get(0)+", "+link.get(1)+" <---> "+link.get(3)+", "+link.get(4), logger.DEBUG);
+                    logger.Println("Delete link: " + link.get(0) + ", " + link.get(1) + " <---> " + link.get(3) + ", " + link.get(4), logger.DEBUG);
                 }
-            }        
+            }
 
-            if(!links_calculate_uniqal.isEmpty())
+            if (!links_calculate_uniqal.isEmpty())
                 area_links_calculate_uniqal.put(area_name, links_calculate_uniqal);
 
-        }  
-    
+        }
+
 
         // write to file links_calculate
-        if(DEBUG) mapToFile(area_links_calculate_uniqal, Neb.debug_folder+"/area_links_calculate_uniqal", Neb.DELAY_WRITE_FILE);
-        
+        if (DEBUG)
+            mapToFile(area_links_calculate_uniqal, Neb.debug_folder + "/area_links_calculate_uniqal", Neb.DELAY_WRITE_FILE);
+
 
         return area_links_calculate_uniqal;
     }
@@ -1877,53 +1864,53 @@ public class Utils {
     //  output: ArrayList(String[](node1,id1,iface1,node2,id2,iface2))     pause in seconds
     public ArrayList<String[]> calculateLinks(ArrayList<ArrayList> deltaCounters, double precession_limit, double min_packets) {
         ArrayList<String[]> result = new ArrayList();
-        
+
         RTree<String, Geometry> tree = RTree.create();
-        for(ArrayList it : deltaCounters) {
-            String item = it.get(0)+";"+it.get(1)+";"+it.get(2);
-            if((Double)it.get(3) > min_packets || (Double)it.get(4) > min_packets) {
-                tree = tree.add(item, Geometries.point((Double)it.get(3),(Double)it.get(4)));
+        for (ArrayList it : deltaCounters) {
+            String item = it.get(0) + ";" + it.get(1) + ";" + it.get(2);
+            if ((Double) it.get(3) > min_packets || (Double) it.get(4) > min_packets) {
+                tree = tree.add(item, Geometries.point((Double) it.get(3), (Double) it.get(4)));
             }
         }
         Map<String, String> links_map_tmp = new HashMap();
-        for(Entry<String, Geometry> it : tree.entries()) {
+        for (Entry<String, Geometry> it : tree.entries()) {
             String name = it.value();
-            Point gm = (Point)it.geometry();
+            Point gm = (Point) it.geometry();
             double x = gm.x();
             double y = gm.y();
-            double distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))*precession_limit;
-            Iterable<Entry<String, Geometry>> entries = tree.search(Geometries.point(y,x), distance);
-            for(Entry<String, Geometry> it1 : entries) {
+            double distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) * precession_limit;
+            Iterable<Entry<String, Geometry>> entries = tree.search(Geometries.point(y, x), distance);
+            for (Entry<String, Geometry> it1 : entries) {
                 String name1 = it1.value();
-                Point gm1 = (Point)it1.geometry();
+                Point gm1 = (Point) it1.geometry();
                 double x1 = gm1.x();
                 double y1 = gm1.y();
-                double dist = Math.sqrt(Math.pow(x-y1, 2) + Math.pow(y-x1, 2));
-                double proc = 2*dist/(x+y);
+                double dist = Math.sqrt(Math.pow(x - y1, 2) + Math.pow(y - x1, 2));
+                double proc = 2 * dist / (x + y);
                 String[] mas = name.split(";");
                 String[] mas1 = name1.split(";");
                 String node1 = mas[0];
                 String node2 = mas1[0];
-                if(!node1.equals(node2)) {
-                    if(links_map_tmp.get(name+";"+name1) == null && links_map_tmp.get(name1+";"+name) == null) {
+                if (!node1.equals(node2)) {
+                    if (links_map_tmp.get(name + ";" + name1) == null && links_map_tmp.get(name1 + ";" + name) == null) {
 //                        System.out.println(name+" <---> "+name1+" --- "+dist+"/"+proc+"/"+x+","+y+";"+x1+","+y1);
-                        links_map_tmp.put(name+";"+name1, dist+"/"+proc);
+                        links_map_tmp.put(name + ";" + name1, dist + "/" + proc);
                     }
                 }
-            }                    
+            }
         }
-        for(Map.Entry<String, String> entry : links_map_tmp.entrySet()) {
+        for (Map.Entry<String, String> entry : links_map_tmp.entrySet()) {
             String key = entry.getKey();
             String val = entry.getValue();
             String[] mas = key.split(";");
             result.add(mas);
-            logger.Println("Links for testing: "+mas[0]+", "+mas[1]+", "+mas[2]+" <---> "+mas[3]+", "+mas[4]+", "+mas[5]+" --- "+val, logger.DEBUG);
+            logger.Println("Links for testing: " + mas[0] + ", " + mas[1] + ", " + mas[2] + " <---> " + mas[3] + ", " + mas[4] + ", " + mas[5] + " --- " + val, logger.DEBUG);
         }
-        
+
         return result;
     }
 
-//    public void TestCalculateLinks() {
+    //    public void TestCalculateLinks() {
 //        
 //        LinkedList<ArrayList> deltaCounters = new LinkedList();
 //        
@@ -2042,11 +2029,11 @@ public class Utils {
         oids.put("ifInUcastPkts", "1.3.6.1.2.1.2.2.1.11");
         oids.put("ifOutUcastPkts", "1.3.6.1.2.1.2.2.1.17");
         oids.put("ifInNUcastPkts", "1.3.6.1.2.1.2.2.1.12");
-        oids.put("ifOutNUcastPkts", "1.3.6.1.2.1.2.2.1.18"); 
+        oids.put("ifOutNUcastPkts", "1.3.6.1.2.1.2.2.1.18");
         oids.put("ifInDiscards", "1.3.6.1.2.1.2.2.1.13");
         oids.put("ifOutDiscards", "1.3.6.1.2.1.2.2.1.19");
         oids.put("ifInErrors", "1.3.6.1.2.1.2.2.1.14");
-        oids.put("ifOutErrors", "1.3.6.1.2.1.2.2.1.20");        
+        oids.put("ifOutErrors", "1.3.6.1.2.1.2.2.1.20");
 
         Map<String, String> oidsV2 = new HashMap<>();
 //        oidsV2.put("ifHCInOctets", "1.3.6.1.2.1.31.1.1.1.6");
@@ -2054,9 +2041,9 @@ public class Utils {
         oidsV2.put("ifHCInUcastPkts", "1.3.6.1.2.1.31.1.1.1.7");
         oidsV2.put("ifHCOutUcastPkts", "1.3.6.1.2.1.31.1.1.1.11");
         oidsV2.put("ifHCInMulticastPkts", "1.3.6.1.2.1.31.1.1.1.8");
-        oidsV2.put("ifHCOutMulticastPkts", "1.3.6.1.2.1.31.1.1.1.12");  
+        oidsV2.put("ifHCOutMulticastPkts", "1.3.6.1.2.1.31.1.1.1.12");
         oidsV2.put("ifHCInBroadcastPkts", "1.3.6.1.2.1.31.1.1.1.9");
-        oidsV2.put("ifHCOutBroadcastPkts", "1.3.6.1.2.1.31.1.1.1.13");         
+        oidsV2.put("ifHCOutBroadcastPkts", "1.3.6.1.2.1.31.1.1.1.13");
 
         Map<String, Map<String, ArrayList>> result = new HashMap<>();
 
@@ -2228,7 +2215,7 @@ public class Utils {
                 ArrayList<String[]> val1 = entry1.getValue();
                 ArrayList val1_new = new ArrayList(val1);
                 res_new.put(key1, val1_new);
-            }            
+            }
         }
         result.put("IfaceMaping", res_new);
 
@@ -2263,89 +2250,89 @@ public class Utils {
 //        
 //        return result;        
 //    }
-    private ArrayList<String> getIpAddressFromNode(Map<String, Map<String, ArrayList>> walkInformationFromNodes, String node) {
-        String ifOperStatus = "1.3.6.1.2.1.2.2.1.8";
-        ArrayList<String> result = new ArrayList();
-        ArrayList<String[]> list = walkInformationFromNodes.get("ifIpAddress").get(node);
-        if (list != null) {
-            result.add(node);
-            for (String[] item : list) {
-                String[] tmp = item[0].split("\\.");
-                String ip = tmp[tmp.length - 4] + "." + tmp[tmp.length - 3] + "." + tmp[tmp.length - 2] + "." + tmp[tmp.length - 1];
-                String id_iface = item[1];
-                ArrayList<String[]> list1 = walkInformationFromNodes.get("ifOperStatus").get(node);
-                if (list1 != null) {
-                    for (String[] item1 : list1) {
-                        if (item1[0].equals(ifOperStatus + "." + id_iface)) {
-                            if (item1[1].equals("1")) {
-                                if (ip.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
-                                    result.add(ip);
-                                } else {
-                                    logger.Println("node=" + node + " ip=" + ip + " is not up.", logger.DEBUG);
-                                }
-                            }
-//                            break;
-                        }
-                    }
-                }
-            }
-        } else {
-            result.add(node);
-        }
+//    private ArrayList<String> getIpAddressFromNode(Map<String, Map<String, ArrayList>> walkInformationFromNodes, String node) {
+//        String ifOperStatus = "1.3.6.1.2.1.2.2.1.8";
+//        ArrayList<String> result = new ArrayList();
+//        ArrayList<String[]> list = walkInformationFromNodes.get("ifIpAddress").get(node);
+//        if (list != null) {
+//            result.add(node);
+//            for (String[] item : list) {
+//                String[] tmp = item[0].split("\\.");
+//                String ip = tmp[tmp.length - 4] + "." + tmp[tmp.length - 3] + "." + tmp[tmp.length - 2] + "." + tmp[tmp.length - 1];
+//                String id_iface = item[1];
+//                ArrayList<String[]> list1 = walkInformationFromNodes.get("ifOperStatus").get(node);
+//                if (list1 != null) {
+//                    for (String[] item1 : list1) {
+//                        if (item1[0].equals(ifOperStatus + "." + id_iface)) {
+//                            if (item1[1].equals("1")) {
+//                                if (ip.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
+//                                    result.add(ip);
+//                                } else {
+//                                    logger.Println("node=" + node + " ip=" + ip + " is not up.", logger.DEBUG);
+//                                }
+//                            }
+////                            break;
+//                        }
+//                    }
+//                }
+//            }
+//        } else {
+//            result.add(node);
+//        }
+//
+////        ru.kos.neb.neb_lib.Utils lib_utils = new ru.kos.neb.neb_lib.Utils();
+//        ArrayList<String> result_sort = new ArrayList();
+//        for (String ip : result) {
+//            boolean find = false;
+//            for (String network : Neb.networks_for_current_area) {
+//                if (Neb.neb_lib_utils.insideInterval(ip, network)) {
+//                    result_sort.add(ip);
+//                    find = true;
+//                    break;
+//                }
+//            }
+//            if (find) {
+//                break;
+//            }
+//        }
+//        if (result_sort.size() == 1) {
+//            for (String ip : result) {
+//                if (!ip.equals(result_sort.get(0))) {
+//                    result_sort.add(ip);
+//                }
+//            }
+//        } else {
+//            result_sort.addAll(result);
+//        }
+//
+//        return result_sort;
+//    }
 
-//        ru.kos.neb.neb_lib.Utils lib_utils = new ru.kos.neb.neb_lib.Utils();
-        ArrayList<String> result_sort = new ArrayList();
-        for (String ip : result) {
-            boolean find = false;
-            for (String network : Neb.networks) {
-                if (Neb.neb_lib_utils.insideInterval(ip, network)) {
-                    result_sort.add(ip);
-                    find = true;
-                    break;
-                }
-            }
-            if (find) {
-                break;
-            }
-        }
-        if (result_sort.size() == 1) {
-            for (String ip : result) {
-                if (!ip.equals(result_sort.get(0))) {
-                    result_sort.add(ip);
-                }
-            }
-        } else {
-            result_sort.addAll(result);
-        }
+//    public Map<String, ArrayList<String>> getIpAddress(Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
+//        Map<String, ArrayList<String>> result = new HashMap();
+//
+//        for (Map.Entry<String, ArrayList> entry : walkInformationFromNodes.get("ifIpAddress").entrySet()) {
+//            String node = entry.getKey();
+//            ArrayList<String> tmp_list = getIpAddressFromNode(walkInformationFromNodes, node);
+//            result.put(node, tmp_list);
+//        }
+//
+//        return result;
+//    }
+//
+//    public Map<String, ArrayList<String>> getIpAddress(Map<String, Map<String, ArrayList>> walkInformationFromNodes, Map<String, String> info_nodes) {
+//        Map<String, ArrayList<String>> result = new HashMap();
+//
+//        for (Map.Entry<String, String> entry : info_nodes.entrySet()) {
+//            String node = entry.getKey();
+//            ArrayList<String> tmp_list = getIpAddressFromNode(walkInformationFromNodes, node);
+//            result.put(node, tmp_list);
+//        }
+//
+//        return result;
+//    }
 
-        return result_sort;
-    }
-
-    public Map<String, ArrayList<String>> getIpAddress(Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
-        Map<String, ArrayList<String>> result = new HashMap();
-
-        for (Map.Entry<String, ArrayList> entry : walkInformationFromNodes.get("ifIpAddress").entrySet()) {
-            String node = entry.getKey();
-            ArrayList<String> tmp_list = getIpAddressFromNode(walkInformationFromNodes, node);
-            result.put(node, tmp_list);
-        }
-
-        return result;
-    }
-
-    public Map<String, ArrayList<String>> getIpAddress(Map<String, Map<String, ArrayList>> walkInformationFromNodes, Map<String, String> info_nodes) {
-        Map<String, ArrayList<String>> result = new HashMap();
-
-        for (Map.Entry<String, String> entry : info_nodes.entrySet()) {
-            String node = entry.getKey();
-            ArrayList<String> tmp_list = getIpAddressFromNode(walkInformationFromNodes, node);
-            result.put(node, tmp_list);
-        }
-
-        return result;
-    }
-
-//    private String GetRealIpAddress(Map<String, ArrayList<String>> hash_ip, String ip_search) {
+    //    private String GetRealIpAddress(Map<String, ArrayList<String>> hash_ip, String ip_search) {
 //        String result=ip_search;
 //        
 //        for (Map.Entry<String, ArrayList<String>> entry : hash_ip.entrySet()) {
@@ -2462,8 +2449,8 @@ public class Utils {
                 out = new StringBuilder(mac);
             } else if (mac.matches("^([0-9A-Fa-f]{1,2}[:-]){5}([0-9A-Fa-f]{1,2})$")) {
                 String[] mas = mac.split(":");
-                for(String it : mas) {
-                    if(it.length() == 1)
+                for (String it : mas) {
+                    if (it.length() == 1)
                         out.append(":0").append(it);
                     else
                         out.append(":").append(it);
@@ -2677,14 +2664,14 @@ public class Utils {
         Map<String, Map<String, ArrayList>> result_area = new HashMap<>();
 
         ArrayList<String[]> list_node_community_version_oid = new ArrayList();
-        for(String[] it1 : node_community_version) {
+        for (String[] it1 : node_community_version) {
             String[] mas = new String[4];
             mas[0] = it1[0];
             mas[1] = it1[1];
             mas[2] = it1[2];
             mas[3] = macTable.get(0);
             list_node_community_version_oid.add(mas);
-        }            
+        }
 
         ArrayList<ArrayList> node_multicommunity_version_list = new ArrayList();
 //        watch_Telemetry_Lib = new Watch_Telemetry_Lib("WalkPool " + vlan_community);
@@ -2710,15 +2697,15 @@ public class Utils {
 
         if (res != null && !res.isEmpty()) {
             for (String[] item : list_node_community_version_oid_new) {
-                if(res.get(item[0]) != null) {
+                if (res.get(item[0]) != null) {
                     ArrayList node_community_version_oid = new ArrayList();
                     node_community_version_oid.add(item[0]);
                     String[] mas = item[1].split("\\|");
-                    if(mas.length != 5) {
+                    if (mas.length != 5) {
                         ArrayList community_list = new ArrayList();
                         for (String[] item1 : res.get(item[0])) {
                             String community = translateHexString_to_SymbolString(item1[1]).replaceAll("NUL", "@");
-                            if(!community.contains("@")) {
+                            if (!community.contains("@")) {
                                 community = item[1];
                             }
                             if (!community_list.contains(community)) {
@@ -2829,7 +2816,7 @@ public class Utils {
         ////////////////////////////////////////////////////
         // remove not unical for node records
         Map<String, ArrayList<String>> map_tmp = new HashMap();
-        for(ArrayList<String> item : node_multicommunity_version_list) {
+        for (ArrayList<String> item : node_multicommunity_version_list) {
             map_tmp.put(item.get(0), item);
         }
         node_multicommunity_version_list.clear();
@@ -2848,22 +2835,22 @@ public class Utils {
 
         // fast mac address scaning. SNMP BULK for 1.3.6.1.2.1.17.7.1.2.2.1.2
         ArrayList<ArrayList> node_community_version_oid_list_new = new ArrayList();
-        for(ArrayList it : node_multicommunity_version_list) {
-            String node = (String)it.get(0);
-            if(res.get(node) == null) {
+        for (ArrayList it : node_multicommunity_version_list) {
+            String node = (String) it.get(0);
+            if (res.get(node) == null) {
                 it.set(3, macTable.get(1));
                 node_community_version_oid_list_new.add(it);
-                logger.Println("\tPrepare alternative MAC table for 1.3.6.1.2.1.17.7.1.2.2.1.2 node - "+node, logger.DEBUG);
+                logger.Println("\tPrepare alternative MAC table for 1.3.6.1.2.1.17.7.1.2.2.1.2 node - " + node, logger.DEBUG);
             }
         }
         node_multicommunity_version_list = node_community_version_oid_list_new;
-        if(!node_multicommunity_version_list.isEmpty()) {
+        if (!node_multicommunity_version_list.isEmpty()) {
             logger.Println("\tStart alternative Walk node_community_version_oid_list for MAC 1.3.6.1.2.1.17.7.1.2.2.1.2", logger.DEBUG);
             Map<String, ArrayList<String[]>> res1 = walkPool.getNodeMultiCommunityVersionOid(node_multicommunity_version_list, Neb.timeout_thread_mac, snmp_port, Neb.timeout_mac, Neb.retries_mac);
             logger.Println("\tStop alternative Walk node_community_version_oid_list for MAC 1.3.6.1.2.1.17.7.1.2.2.1.2", logger.DEBUG);
             for (Map.Entry<String, ArrayList<String[]>> entry : res1.entrySet()) {
                 String node = entry.getKey();
-                logger.Println("MAC address alternative 1.3.6.1.2.1.17.7.1.2.2.1.2 from  node - "+node, logger.DEBUG);
+                logger.Println("MAC address alternative 1.3.6.1.2.1.17.7.1.2.2.1.2 from  node - " + node, logger.DEBUG);
             }
             res.putAll(res1);
         }
@@ -2884,12 +2871,12 @@ public class Utils {
 //            res.putAll(res2);
 //        }
 
-        for(ArrayList it : node_multicommunity_version_list) {
-            String node = (String)it.get(0);
-            if(res.get(node) == null) {
-                logger.Println("Not MAC address from  node - "+node, logger.DEBUG);
+        for (ArrayList it : node_multicommunity_version_list) {
+            String node = (String) it.get(0);
+            if (res.get(node) == null) {
+                logger.Println("Not MAC address from  node - " + node, logger.DEBUG);
             }
-        }            
+        }
 
 
         for (Map.Entry<String, ArrayList<String[]>> entry : res.entrySet()) {
@@ -3050,13 +3037,13 @@ public class Utils {
             }
             out_map.put(node, val_map_new);
         }
-        
+
         return out_map;
     }
 
     public String decToHex(int dec) {
         char[] hexDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            'a', 'b', 'c', 'd', 'e', 'f'};
+                'a', 'b', 'c', 'd', 'e', 'f'};
 
         String hex = String.valueOf(hexDigits[dec / 16]) + hexDigits[dec % 16];
 
@@ -3094,9 +3081,9 @@ public class Utils {
 
     // Output format: list(node, iface_id, iface_name, ip, mac 
     public ArrayList<String[]> arpmac(Map<String, Map<String, ArrayList>> MAC,
-            Map<String, String> ARP,
-            ArrayList<String[]> node_community_version,
-            Map<String, Map<String, String>> node_ifaceid_ifacename) {
+                                      Map<String, String> ARP,
+                                      ArrayList<String[]> node_community_version,
+                                      Map<String, Map<String, String>> node_ifaceid_ifacename) {
 
 
         ArrayList<String[]> result_area = new ArrayList();
@@ -3107,7 +3094,7 @@ public class Utils {
             String node = entry1.getKey();
             ArrayList<String[]> val = entry1.getValue();
             Map<String, String> map_tmp = new HashMap();
-            for(String[] item : val) {
+            for (String[] item : val) {
                 String id = item[0].split("\\.")[item[0].split("\\.").length - 1];
                 map_tmp.put(id, item[1]);
             }
@@ -3144,16 +3131,16 @@ public class Utils {
 
                     String iface_name = "";
                     String iface_type = "";
-                    if(node_ifaceid_ifacename != null &&
+                    if (node_ifaceid_ifacename != null &&
                             node_ifaceid_ifacename.get(node) != null &&
                             node_ifaceid_ifacename.get(node).get(iface_id) != null) {
                         iface_name = node_ifaceid_ifacename.get(node).get(iface_id);
 
-                        if(node_id_iftype.get(node) != null && node_id_iftype.get(node).get(iface_id) != null) {
+                        if (node_id_iftype.get(node) != null && node_id_iftype.get(node).get(iface_id) != null) {
                             String iftype = node_id_iftype.get(node).get(iface_id);
                             if (!iftype.equals("24") && Integer.parseInt(iftype) <= 32) {
                                 iface_type = iftype;
-                            }                                
+                            }
                         }
                     }
 
@@ -3197,7 +3184,7 @@ public class Utils {
 
         return result_area;
     }
-    
+
     @SuppressWarnings("ConvertToTryWithResources")
     public String getInCountersTesting(String node, String community, int version, String id_iface, String id_iface_alt) {
         String ifInUcastPkts = "1.3.6.1.2.1.2.2.1.11";
@@ -3214,52 +3201,55 @@ public class Utils {
 //        String ifHCOutMulticastPkts = "1.3.6.1.2.1.31.1.1.1.12";  
         String ifHCInBroadcastPkts = "1.3.6.1.2.1.31.1.1.1.9";
 //        String ifHCOutBroadcastPkts = "1.3.6.1.2.1.31.1.1.1.13"; 
-        
+
         try {
             GetSnmp getSnmp = new GetSnmp();
             TransportMapping transport = new DefaultUdpTransportMapping();
             Snmp snmp = new Snmp(transport);
-            transport.listen();            
-            
-            String inUcastPkts = getSnmp.getLite(snmp, node, community, ifHCInUcastPkts+"."+id_iface, version, 161, 3, 2)[1];
-            if(inUcastPkts == null) {
-                if(id_iface_alt != null) {
-                    inUcastPkts = getSnmp.getLite(snmp, node, community, ifHCInUcastPkts+"."+id_iface_alt, version, 161, 3, 2)[1];
+            transport.listen();
+
+            String inUcastPkts = getSnmp.getLite(snmp, node, community, ifHCInUcastPkts + "." + id_iface, version, 161, 3, 2)[1];
+            if (inUcastPkts == null) {
+                if (id_iface_alt != null) {
+                    inUcastPkts = getSnmp.getLite(snmp, node, community, ifHCInUcastPkts + "." + id_iface_alt, version, 161, 3, 2)[1];
                 }
-                if(inUcastPkts == null) {
-                    inUcastPkts = getSnmp.getLite(snmp, node, community, ifInUcastPkts+"."+id_iface, version, 161, 3, 2)[1];
+                if (inUcastPkts == null) {
+                    inUcastPkts = getSnmp.getLite(snmp, node, community, ifInUcastPkts + "." + id_iface, version, 161, 3, 2)[1];
                 }
             }
-            String inMulticastPkts = getSnmp.getLite(snmp, node, community, ifHCInMulticastPkts+"."+id_iface, version, 161, 3, 2)[1];
-            if(inMulticastPkts == null && id_iface_alt != null) {
-                inMulticastPkts = getSnmp.getLite(snmp, node, community, ifHCInMulticastPkts+"."+id_iface_alt, version, 161, 3, 2)[1];
-            }                
-            String inBroadcastPkts = getSnmp.getLite(snmp, node, community, ifHCInBroadcastPkts+"."+id_iface, version, 161, 3, 2)[1];
-            if(inBroadcastPkts == null && id_iface_alt != null) {
-                inBroadcastPkts = getSnmp.getLite(snmp, node, community, ifHCInBroadcastPkts+"."+id_iface_alt, version, 161, 3, 2)[1];
-            }                  
-            String inNUcastPkts = getSnmp.getLite(snmp, node, community, ifInNUcastPkts+"."+id_iface, version, 161, 3, 2)[1];
-            String inDiscards = getSnmp.getLite(snmp, node, community, ifInDiscards+"."+id_iface, version, 161, 3, 2)[1];
-            String inErrors = getSnmp.getLite(snmp, node, community, ifInErrors+"."+id_iface, version, 161, 3, 2)[1];
-            
-            if(inUcastPkts == null || inUcastPkts.isEmpty()) inUcastPkts="0";
-            if(inMulticastPkts == null || inMulticastPkts.isEmpty()) inMulticastPkts="0";
-            if(inBroadcastPkts == null || inBroadcastPkts.isEmpty()) inBroadcastPkts="0";
-            if(inNUcastPkts == null || inNUcastPkts.isEmpty()) inNUcastPkts="0";
-            if(inDiscards == null || inDiscards.isEmpty()) inDiscards="0";
-            if(inErrors == null || inErrors.isEmpty()) inErrors="0";
-            String out = inUcastPkts+","+inMulticastPkts+","+inBroadcastPkts+","+inNUcastPkts+","+inDiscards+","+inErrors;
-            
+            String inMulticastPkts = getSnmp.getLite(snmp, node, community, ifHCInMulticastPkts + "." + id_iface, version, 161, 3, 2)[1];
+            if (inMulticastPkts == null && id_iface_alt != null) {
+                inMulticastPkts = getSnmp.getLite(snmp, node, community, ifHCInMulticastPkts + "." + id_iface_alt, version, 161, 3, 2)[1];
+            }
+            String inBroadcastPkts = getSnmp.getLite(snmp, node, community, ifHCInBroadcastPkts + "." + id_iface, version, 161, 3, 2)[1];
+            if (inBroadcastPkts == null && id_iface_alt != null) {
+                inBroadcastPkts = getSnmp.getLite(snmp, node, community, ifHCInBroadcastPkts + "." + id_iface_alt, version, 161, 3, 2)[1];
+            }
+            String inNUcastPkts = getSnmp.getLite(snmp, node, community, ifInNUcastPkts + "." + id_iface, version, 161, 3, 2)[1];
+            String inDiscards = getSnmp.getLite(snmp, node, community, ifInDiscards + "." + id_iface, version, 161, 3, 2)[1];
+            String inErrors = getSnmp.getLite(snmp, node, community, ifInErrors + "." + id_iface, version, 161, 3, 2)[1];
+
+            if (inUcastPkts == null || inUcastPkts.isEmpty()) inUcastPkts = "0";
+            if (inMulticastPkts == null || inMulticastPkts.isEmpty()) inMulticastPkts = "0";
+            if (inBroadcastPkts == null || inBroadcastPkts.isEmpty()) inBroadcastPkts = "0";
+            if (inNUcastPkts == null || inNUcastPkts.isEmpty()) inNUcastPkts = "0";
+            if (inDiscards == null || inDiscards.isEmpty()) inDiscards = "0";
+            if (inErrors == null || inErrors.isEmpty()) inErrors = "0";
+            String out = inUcastPkts + "," + inMulticastPkts + "," + inBroadcastPkts + "," + inNUcastPkts + "," + inDiscards + "," + inErrors;
+
             // disconnect
             snmp.close();
-            transport.close();             
-            try { Thread.sleep(1000); } catch (InterruptedException ex) {}
-            
+            transport.close();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+            }
+
             return out;
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             System.out.println("Error SNMP!!!");
             double MAX_VALUE64 = Math.pow(2, 64);
-            return String.valueOf(Math.abs(Math.random()*MAX_VALUE64));
+            return String.valueOf(Math.abs(Math.random() * MAX_VALUE64));
         }
     }
 
@@ -3268,66 +3258,69 @@ public class Utils {
 //        String ifInUcastPkts = "1.3.6.1.2.1.2.2.1.11";
         String ifOutUcastPkts = "1.3.6.1.2.1.2.2.1.17";
 //        String ifInNUcastPkts = "1.3.6.1.2.1.2.2.1.12";
-        String ifOutNUcastPkts = "1.3.6.1.2.1.2.2.1.18"; 
+        String ifOutNUcastPkts = "1.3.6.1.2.1.2.2.1.18";
 //        String ifInDiscards = "1.3.6.1.2.1.2.2.1.13";
         String ifOutDiscards = "1.3.6.1.2.1.2.2.1.19";
 //        String ifInErrors = "1.3.6.1.2.1.2.2.1.14";
-        String ifOutErrors = "1.3.6.1.2.1.2.2.1.20";        
+        String ifOutErrors = "1.3.6.1.2.1.2.2.1.20";
 //        String ifHCInUcastPkts = "1.3.6.1.2.1.31.1.1.1.7";
         String ifHCOutUcastPkts = "1.3.6.1.2.1.31.1.1.1.11";
 //        String ifHCInMulticastPkts = "1.3.6.1.2.1.31.1.1.1.8";
-        String ifHCOutMulticastPkts = "1.3.6.1.2.1.31.1.1.1.12";  
+        String ifHCOutMulticastPkts = "1.3.6.1.2.1.31.1.1.1.12";
 //        String ifHCInBroadcastPkts = "1.3.6.1.2.1.31.1.1.1.9";
-        String ifHCOutBroadcastPkts = "1.3.6.1.2.1.31.1.1.1.13"; 
-        
+        String ifHCOutBroadcastPkts = "1.3.6.1.2.1.31.1.1.1.13";
+
         try {
             GetSnmp getSnmp = new GetSnmp();
             TransportMapping transport = new DefaultUdpTransportMapping();
             Snmp snmp = new Snmp(transport);
-            transport.listen();              
-            
-            String outUcastPkts = getSnmp.getLite(snmp, node, community, ifHCOutUcastPkts+"."+id_iface, version, 161, 3, 2)[1];
-            if(outUcastPkts == null) {
-                if(id_iface_alt != null) {
-                    outUcastPkts = getSnmp.getLite(snmp, node, community, ifHCOutUcastPkts+"."+id_iface_alt, version, 161, 3, 2)[1];
+            transport.listen();
+
+            String outUcastPkts = getSnmp.getLite(snmp, node, community, ifHCOutUcastPkts + "." + id_iface, version, 161, 3, 2)[1];
+            if (outUcastPkts == null) {
+                if (id_iface_alt != null) {
+                    outUcastPkts = getSnmp.getLite(snmp, node, community, ifHCOutUcastPkts + "." + id_iface_alt, version, 161, 3, 2)[1];
                 }
-                if(outUcastPkts == null) {
-                    outUcastPkts = getSnmp.getLite(snmp, node, community, ifOutUcastPkts+"."+id_iface, version, 161, 3, 2)[1];
+                if (outUcastPkts == null) {
+                    outUcastPkts = getSnmp.getLite(snmp, node, community, ifOutUcastPkts + "." + id_iface, version, 161, 3, 2)[1];
                 }
             }
-            String outMulticastPkts = getSnmp.getLite(snmp, node, community, ifHCOutMulticastPkts+"."+id_iface, version, 161, 3, 2)[1];
-            if(outMulticastPkts == null && id_iface_alt != null) {
-                outMulticastPkts = getSnmp.getLite(snmp, node, community, ifHCOutMulticastPkts+"."+id_iface_alt, version, 161, 3, 2)[1];
-            }                
-            String outBroadcastPkts = getSnmp.getLite(snmp, node, community, ifHCOutBroadcastPkts+"."+id_iface, version, 161, 3, 2)[1];
-            if(outBroadcastPkts == null && id_iface_alt != null) {
-                outBroadcastPkts = getSnmp.getLite(snmp, node, community, ifHCOutBroadcastPkts+"."+id_iface_alt, version, 161, 3, 2)[1];
-            }                  
-            String outNUcastPkts = getSnmp.getLite(snmp, node, community, ifOutNUcastPkts+"."+id_iface, version, 161, 3, 2)[1];
-            String outDiscards = getSnmp.getLite(snmp, node, community, ifOutDiscards+"."+id_iface, version, 161, 3, 2)[1];
-            String outErrors = getSnmp.getLite(snmp, node, community, ifOutErrors+"."+id_iface, version, 161, 3, 2)[1];
-            
-            if(outUcastPkts == null || outUcastPkts.isEmpty()) outUcastPkts="0";
-            if(outMulticastPkts == null || outMulticastPkts.isEmpty()) outMulticastPkts="0";
-            if(outBroadcastPkts == null || outBroadcastPkts.isEmpty()) outBroadcastPkts="0";
-            if(outNUcastPkts == null || outNUcastPkts.isEmpty()) outNUcastPkts="0";
-            if(outDiscards == null || outDiscards.isEmpty()) outDiscards="0";
-            if(outErrors == null || outErrors.isEmpty()) outErrors="0";
-            
-            String out = outUcastPkts+","+outMulticastPkts+","+outBroadcastPkts+","+outNUcastPkts+","+outDiscards+","+outErrors;
+            String outMulticastPkts = getSnmp.getLite(snmp, node, community, ifHCOutMulticastPkts + "." + id_iface, version, 161, 3, 2)[1];
+            if (outMulticastPkts == null && id_iface_alt != null) {
+                outMulticastPkts = getSnmp.getLite(snmp, node, community, ifHCOutMulticastPkts + "." + id_iface_alt, version, 161, 3, 2)[1];
+            }
+            String outBroadcastPkts = getSnmp.getLite(snmp, node, community, ifHCOutBroadcastPkts + "." + id_iface, version, 161, 3, 2)[1];
+            if (outBroadcastPkts == null && id_iface_alt != null) {
+                outBroadcastPkts = getSnmp.getLite(snmp, node, community, ifHCOutBroadcastPkts + "." + id_iface_alt, version, 161, 3, 2)[1];
+            }
+            String outNUcastPkts = getSnmp.getLite(snmp, node, community, ifOutNUcastPkts + "." + id_iface, version, 161, 3, 2)[1];
+            String outDiscards = getSnmp.getLite(snmp, node, community, ifOutDiscards + "." + id_iface, version, 161, 3, 2)[1];
+            String outErrors = getSnmp.getLite(snmp, node, community, ifOutErrors + "." + id_iface, version, 161, 3, 2)[1];
+
+            if (outUcastPkts == null || outUcastPkts.isEmpty()) outUcastPkts = "0";
+            if (outMulticastPkts == null || outMulticastPkts.isEmpty()) outMulticastPkts = "0";
+            if (outBroadcastPkts == null || outBroadcastPkts.isEmpty()) outBroadcastPkts = "0";
+            if (outNUcastPkts == null || outNUcastPkts.isEmpty()) outNUcastPkts = "0";
+            if (outDiscards == null || outDiscards.isEmpty()) outDiscards = "0";
+            if (outErrors == null || outErrors.isEmpty()) outErrors = "0";
+
+            String out = outUcastPkts + "," + outMulticastPkts + "," + outBroadcastPkts + "," + outNUcastPkts + "," + outDiscards + "," + outErrors;
 
             // disconnect
             snmp.close();
-            transport.close();              
-            try { Thread.sleep(1000); } catch (InterruptedException ex) {}
+            transport.close();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+            }
             return out;
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             System.out.println("Error SNMP!!!");
             double MAX_VALUE64 = Math.pow(2, 64);
-            return String.valueOf(Math.abs(Math.random()*MAX_VALUE64));
-        }        
-    }    
-    
+            return String.valueOf(Math.abs(Math.random() * MAX_VALUE64));
+        }
+    }
+
     //  output: ArrayList(String[](node1,id1,iface1,node2,id2,iface2, in1, ou1, in2, out2, time))
     public ArrayList<String[]> getCountersTestingLinks(ArrayList<String[]> links, Map<String, String[]> node_community_version_map) {
         ArrayList<String[]> result = new ArrayList();
@@ -3348,35 +3341,35 @@ public class Utils {
                         f.cancel(true);
                         System.out.println("Future Exception CancellationException!!!");
                     }
-                    if(res != null)
+                    if (res != null)
                         result.add(res);
-                }                 
+                }
             } catch (InterruptedException | ExecutionException ex) {
-                System.out.println("Exception="+ex);
+                System.out.println("Exception=" + ex);
             }
-        }        
+        }
 
         return result;
     }
-    
+
     private String[] countersTestingLink(String[] link, Map<String, String[]> node_community_version_map) {
         String[] result = null;
-        
+
 //        logger.Println("Start counters testing link: " + link[0] + "," + link[1] + "," + link[2] + "," + link[3] + "," + link[4] + "," + link[5], logger.DEBUG);
         String node1 = link[0];
         String id1 = link[1];
         String id_alt1 = link[2];
         String node2 = link[3];
         String id2 = link[4];
-        String id_alt2 = link[5]; 
+        String id_alt2 = link[5];
         String[] node_comm_ver1 = node_community_version_map.get(node1);
         String[] node_comm_ver2 = node_community_version_map.get(node2);
-        if(node_comm_ver1 != null && node_comm_ver2 != null) {
+        if (node_comm_ver1 != null && node_comm_ver2 != null) {
             String community1 = node_comm_ver1[1];
             int version1 = Integer.parseInt(node_comm_ver1[2]);
             String community2 = node_comm_ver2[1];
             int version2 = Integer.parseInt(node_comm_ver2[2]);
-            
+
             long start_time = System.currentTimeMillis();
             // input
             String in1 = getInCountersTesting(node1, community1, version1, id1, id_alt1);
@@ -3400,32 +3393,32 @@ public class Utils {
                 result[10] = String.valueOf(stop_time - start_time);
 //                logger.Println("Stop counters testing link OK: " + link[0] + "," + link[1] + "," + link[2] + "," + link[3] + "," + link[4] + "," + link[5], logger.DEBUG);
             } else {
-                logger.Println("Stop counters testing link ERR!!!: " + link[0] + "," + link[1] + "," + link[2] + "," + link[3] + "," + link[4] + "," + link[5]+"\nin1="+in1+", out1="+out1+", in2="+in2+", out2="+out2, logger.DEBUG);
+                logger.Println("Stop counters testing link ERR!!!: " + link[0] + "," + link[1] + "," + link[2] + "," + link[3] + "," + link[4] + "," + link[5] + "\nin1=" + in1 + ", out1=" + out1 + ", in2=" + in2 + ", out2=" + out2, logger.DEBUG);
             }
         } else {
-            if(node_comm_ver1 == null)
-                logger.Println("ERR!!! node_comm_ver: node1="+node1+" - null", logger.DEBUG);
-            if(node_comm_ver2 == null)
-                logger.Println("ERR!!! node_comm_ver: node2="+node2+" - null", logger.DEBUG);
-            
+            if (node_comm_ver1 == null)
+                logger.Println("ERR!!! node_comm_ver: node1=" + node1 + " - null", logger.DEBUG);
+            if (node_comm_ver2 == null)
+                logger.Println("ERR!!! node_comm_ver: node2=" + node2 + " - null", logger.DEBUG);
+
         }
 //        try { Thread.sleep(1000); } catch (InterruptedException ex) {}
-        return result;        
+        return result;
     }
 
     //  output: ArrayList(String[](node1,id1,iface1,node2,id2,iface2))
     public ArrayList<String[]> calculateTestingLinks(ArrayList<String[]> testingLinks_start, ArrayList<String[]> testingLinks_stop, double precession_limit) {
         ArrayList<String[]> result = new ArrayList();
-        
+
         Map<String, String[]> testingLinks_stop_map = new HashMap();
         for (String[] item : testingLinks_stop) {
-            String key = item[0]+" "+item[1]+" "+item[3]+" "+item[4];
+            String key = item[0] + " " + item[1] + " " + item[3] + " " + item[4];
             testingLinks_stop_map.put(key, item);
         }
 
         for (String[] item : testingLinks_start) {
-            String key = item[0]+" "+item[1]+" "+item[3]+" "+item[4];
-            if(testingLinks_stop_map.get(key) != null) {
+            String key = item[0] + " " + item[1] + " " + item[3] + " " + item[4];
+            if (testingLinks_stop_map.get(key) != null) {
                 String[] item1 = testingLinks_stop_map.get(key);
                 String[] in1_start = item[6].split(",");
                 String[] out1_start = item[7].split(",");
@@ -3434,7 +3427,7 @@ public class Utils {
                 String[] in1_stop = item1[6].split(",");
                 String[] out1_stop = item1[7].split(",");
                 String[] in2_stop = item1[8].split(",");
-                String[] out2_stop = item1[9].split(",");                    
+                String[] out2_stop = item1[9].split(",");
                 double delta_inUcast1 = delta(Double.parseDouble(in1_start[0]), Double.parseDouble(in1_stop[0]));
                 double delta_inMulticast1 = delta(Double.parseDouble(in1_start[1]), Double.parseDouble(in1_stop[1]));
                 double delta_inBroadcast1 = delta(Double.parseDouble(in1_start[2]), Double.parseDouble(in1_stop[2]));
@@ -3464,59 +3457,59 @@ public class Utils {
                 double delta_out_errors2 = delta(Double.parseDouble(out2_start[5]), Double.parseDouble(out2_stop[5]));
 
                 double delta_in1;
-                if(delta_inNUcast1 > 0)
-                    delta_in1 = delta_inUcast1+delta_inNUcast1+delta_in_discards1+delta_in_errors1;
+                if (delta_inNUcast1 > 0)
+                    delta_in1 = delta_inUcast1 + delta_inNUcast1 + delta_in_discards1 + delta_in_errors1;
                 else
-                    delta_in1 = delta_inUcast1+delta_inMulticast1+delta_inBroadcast1+delta_in_discards1+delta_in_errors1;
+                    delta_in1 = delta_inUcast1 + delta_inMulticast1 + delta_inBroadcast1 + delta_in_discards1 + delta_in_errors1;
 
                 double delta_out1;
-                if(delta_outNUcast1 > 0)
-                    delta_out1 = delta_outUcast1+delta_outNUcast1+delta_out_discards1+delta_out_errors1;
+                if (delta_outNUcast1 > 0)
+                    delta_out1 = delta_outUcast1 + delta_outNUcast1 + delta_out_discards1 + delta_out_errors1;
                 else
-                    delta_out1 = delta_outUcast1+delta_outMulticast1+delta_outBroadcast1+delta_out_discards1+delta_out_errors1;
+                    delta_out1 = delta_outUcast1 + delta_outMulticast1 + delta_outBroadcast1 + delta_out_discards1 + delta_out_errors1;
 
-                if(delta_in1 == 0 && delta_out1 == 0) {
-                    double rnd1 = Math.abs(Math.random()*Math.pow(2, 64));
+                if (delta_in1 == 0 && delta_out1 == 0) {
+                    double rnd1 = Math.abs(Math.random() * Math.pow(2, 64));
                     delta_in1 = rnd1;
-                    double rnd2 = Math.abs(Math.random()*Math.pow(2, 64));
-                    delta_out1 = rnd2;                        
-                } 
+                    double rnd2 = Math.abs(Math.random() * Math.pow(2, 64));
+                    delta_out1 = rnd2;
+                }
 
                 double delta_in2;
-                if(delta_inNUcast2 > 0)
-                    delta_in2 = delta_inUcast2+delta_inNUcast2+delta_in_discards2+delta_in_errors2;
+                if (delta_inNUcast2 > 0)
+                    delta_in2 = delta_inUcast2 + delta_inNUcast2 + delta_in_discards2 + delta_in_errors2;
                 else
-                    delta_in2 = delta_inUcast2+delta_inMulticast2+delta_inBroadcast2+delta_in_discards2+delta_in_errors2;
+                    delta_in2 = delta_inUcast2 + delta_inMulticast2 + delta_inBroadcast2 + delta_in_discards2 + delta_in_errors2;
 
                 double delta_out2;
-                if(delta_outNUcast2 > 0)
-                    delta_out2 = delta_outUcast2+delta_outNUcast2+delta_out_discards2+delta_out_errors2;
+                if (delta_outNUcast2 > 0)
+                    delta_out2 = delta_outUcast2 + delta_outNUcast2 + delta_out_discards2 + delta_out_errors2;
                 else
-                    delta_out2 = delta_outUcast2+delta_outMulticast2+delta_outBroadcast2+delta_out_discards2+delta_out_errors2;
+                    delta_out2 = delta_outUcast2 + delta_outMulticast2 + delta_outBroadcast2 + delta_out_discards2 + delta_out_errors2;
 
-                if(delta_in2 == 0 && delta_out2 == 0) {
-                    double rnd1 = Math.abs(Math.random()*Math.pow(2, 64));
+                if (delta_in2 == 0 && delta_out2 == 0) {
+                    double rnd1 = Math.abs(Math.random() * Math.pow(2, 64));
                     delta_in2 = rnd1;
-                    double rnd2 = Math.abs(Math.random()*Math.pow(2, 64));
-                    delta_out2 = rnd2;                        
-                } 
+                    double rnd2 = Math.abs(Math.random() * Math.pow(2, 64));
+                    delta_out2 = rnd2;
+                }
 
                 if (delta_in1 > 0 && delta_out1 > 0 && delta_in2 > 0 && delta_out2 > 0) {
                     double epsilon1 = 0;
-                    if(delta_in1 + delta_out2 > 0) {
+                    if (delta_in1 + delta_out2 > 0) {
                         epsilon1 = 2 * abs(delta_in1 - delta_out2) / (delta_in1 + delta_out2);
                     }
                     double epsilon2 = 0;
-                    if(delta_in2 + delta_out1 > 0) {
+                    if (delta_in2 + delta_out1 > 0) {
                         epsilon2 = 2 * abs(delta_in2 - delta_out1) / (delta_in2 + delta_out1);
                     }
                     double epsilon = (epsilon1 + epsilon2) / 2;
-                    if(epsilon == 0) {
-                        epsilon = Math.abs(Math.random()*Math.pow(2, 32));
-                    }                        
+                    if (epsilon == 0) {
+                        epsilon = Math.abs(Math.random() * Math.pow(2, 32));
+                    }
 
 //                        float precession_limit=(float)((delta_time+time_lag)/wait_time);
-                    if (epsilon < precession_limit/2) {
+                    if (epsilon < precession_limit / 2) {
                         String[] mas = new String[8];
                         mas[0] = item[0];
                         mas[1] = item[1];
@@ -3525,62 +3518,62 @@ public class Utils {
                         mas[4] = item[4];
                         mas[5] = item[5];
                         mas[6] = String.valueOf(epsilon);
-                        mas[7] = String.valueOf(precession_limit/2);
+                        mas[7] = String.valueOf(precession_limit / 2);
                         logger.Println("CalculateTestingLink: " + mas[0] + "," + mas[1] + "," + mas[2] + "," + mas[3] + "," + mas[4] + "," + mas[5] + "," + mas[6] + "," + mas[7], logger.DEBUG);
                         result.add(mas);
                     } else {
                         // alternative calculete without discards and errors packets
                         ////////////////////////////////////////////////////////////
-                        if(delta_inNUcast1 > 0)
-                            delta_in1 = delta_inUcast1+delta_inNUcast1;
+                        if (delta_inNUcast1 > 0)
+                            delta_in1 = delta_inUcast1 + delta_inNUcast1;
                         else
-                            delta_in1 = delta_inUcast1+delta_inMulticast1+delta_inBroadcast1;
+                            delta_in1 = delta_inUcast1 + delta_inMulticast1 + delta_inBroadcast1;
 
-                        if(delta_outNUcast1 > 0)
-                            delta_out1 = delta_outUcast1+delta_outNUcast1;
+                        if (delta_outNUcast1 > 0)
+                            delta_out1 = delta_outUcast1 + delta_outNUcast1;
                         else
-                            delta_out1 = delta_outUcast1+delta_outMulticast1+delta_outBroadcast1;
+                            delta_out1 = delta_outUcast1 + delta_outMulticast1 + delta_outBroadcast1;
 
-                        if(delta_in1 == 0 && delta_out1 == 0) {
-                            double rnd1 = Math.abs(Math.random()*Math.pow(2, 64));
+                        if (delta_in1 == 0 && delta_out1 == 0) {
+                            double rnd1 = Math.abs(Math.random() * Math.pow(2, 64));
                             delta_in1 = rnd1;
-                            double rnd2 = Math.abs(Math.random()*Math.pow(2, 64));
-                            delta_out1 = rnd2;                        
-                        } 
+                            double rnd2 = Math.abs(Math.random() * Math.pow(2, 64));
+                            delta_out1 = rnd2;
+                        }
 
-                        if(delta_inNUcast2 > 0)
-                            delta_in2 = delta_inUcast2+delta_inNUcast2;
+                        if (delta_inNUcast2 > 0)
+                            delta_in2 = delta_inUcast2 + delta_inNUcast2;
                         else
-                            delta_in2 = delta_inUcast2+delta_inMulticast2+delta_inBroadcast2;
+                            delta_in2 = delta_inUcast2 + delta_inMulticast2 + delta_inBroadcast2;
 
-                        if(delta_outNUcast2 > 0)
-                            delta_out2 = delta_outUcast2+delta_outNUcast2;
+                        if (delta_outNUcast2 > 0)
+                            delta_out2 = delta_outUcast2 + delta_outNUcast2;
                         else
-                            delta_out2 = delta_outUcast2+delta_outMulticast2+delta_outBroadcast2;
+                            delta_out2 = delta_outUcast2 + delta_outMulticast2 + delta_outBroadcast2;
 
-                        if(delta_in2 == 0 && delta_out2 == 0) {
-                            double rnd1 = Math.abs(Math.random()*Math.pow(2, 64));
+                        if (delta_in2 == 0 && delta_out2 == 0) {
+                            double rnd1 = Math.abs(Math.random() * Math.pow(2, 64));
                             delta_in2 = rnd1;
-                            double rnd2 = Math.abs(Math.random()*Math.pow(2, 64));
-                            delta_out2 = rnd2;                        
-                        } 
+                            double rnd2 = Math.abs(Math.random() * Math.pow(2, 64));
+                            delta_out2 = rnd2;
+                        }
 
                         if (delta_in1 > 0 && delta_out1 > 0 && delta_in2 > 0 && delta_out2 > 0) {
                             epsilon1 = 0;
-                            if(delta_in1 + delta_out2 > 0) {
+                            if (delta_in1 + delta_out2 > 0) {
                                 epsilon1 = 2 * abs(delta_in1 - delta_out2) / (delta_in1 + delta_out2);
                             }
                             epsilon2 = 0;
-                            if(delta_in2 + delta_out1 > 0) {
+                            if (delta_in2 + delta_out1 > 0) {
                                 epsilon2 = 2 * abs(delta_in2 - delta_out1) / (delta_in2 + delta_out1);
                             }
                             epsilon = (epsilon1 + epsilon2) / 2;
-                            if(epsilon == 0) {
-                                epsilon = Math.abs(Math.random()*Math.pow(2, 32));
-                            }                        
+                            if (epsilon == 0) {
+                                epsilon = Math.abs(Math.random() * Math.pow(2, 32));
+                            }
 
-    //                        float precession_limit=(float)((delta_time+time_lag)/wait_time);
-                            if (epsilon < precession_limit/2) {
+                            //                        float precession_limit=(float)((delta_time+time_lag)/wait_time);
+                            if (epsilon < precession_limit / 2) {
                                 String[] mas = new String[8];
                                 mas[0] = item[0];
                                 mas[1] = item[1];
@@ -3589,60 +3582,60 @@ public class Utils {
                                 mas[4] = item[4];
                                 mas[5] = item[5];
                                 mas[6] = String.valueOf(epsilon);
-                                mas[7] = String.valueOf(precession_limit/2);
+                                mas[7] = String.valueOf(precession_limit / 2);
                                 logger.Println("CalculateTestingLink: " + mas[0] + "," + mas[1] + "," + mas[2] + "," + mas[3] + "," + mas[4] + "," + mas[5] + "," + mas[6] + "," + mas[7], logger.DEBUG);
                                 result.add(mas);
                             } else {
                                 // alternative calculete without discards and errors packets
                                 ////////////////////////////////////////////////////////////
-                                if(delta_inMulticast1+delta_inBroadcast1+delta_inNUcast1 == 0) {
+                                if (delta_inMulticast1 + delta_inBroadcast1 + delta_inNUcast1 == 0) {
                                     delta_in1 = delta_inUcast1;
                                     delta_out1 = delta_outUcast1;
-                                    if(delta_in1 == 0 && delta_out1 == 0) {
-                                        double rnd1 = Math.abs(Math.random()*Math.pow(2, 64));
+                                    if (delta_in1 == 0 && delta_out1 == 0) {
+                                        double rnd1 = Math.abs(Math.random() * Math.pow(2, 64));
                                         delta_in1 = rnd1;
-                                        double rnd2 = Math.abs(Math.random()*Math.pow(2, 64));
-                                        delta_out1 = rnd2;                        
-                                    } 
+                                        double rnd2 = Math.abs(Math.random() * Math.pow(2, 64));
+                                        delta_out1 = rnd2;
+                                    }
                                 } else {
-                                    double rnd1 = Math.abs(Math.random()*Math.pow(2, 64));
+                                    double rnd1 = Math.abs(Math.random() * Math.pow(2, 64));
                                     delta_in1 = rnd1;
-                                    double rnd2 = Math.abs(Math.random()*Math.pow(2, 64));
-                                    delta_out1 = rnd2;                                     
+                                    double rnd2 = Math.abs(Math.random() * Math.pow(2, 64));
+                                    delta_out1 = rnd2;
                                 }
-                                if(delta_inMulticast2+delta_inBroadcast2+delta_inNUcast2 == 0) {
+                                if (delta_inMulticast2 + delta_inBroadcast2 + delta_inNUcast2 == 0) {
                                     delta_in2 = delta_inUcast2;
                                     delta_out2 = delta_outUcast2;
 
-                                    if(delta_in2 == 0 && delta_out2 == 0) {
-                                        double rnd1 = Math.abs(Math.random()*Math.pow(2, 64));
+                                    if (delta_in2 == 0 && delta_out2 == 0) {
+                                        double rnd1 = Math.abs(Math.random() * Math.pow(2, 64));
                                         delta_in2 = rnd1;
-                                        double rnd2 = Math.abs(Math.random()*Math.pow(2, 64));
-                                        delta_out2 = rnd2;                        
+                                        double rnd2 = Math.abs(Math.random() * Math.pow(2, 64));
+                                        delta_out2 = rnd2;
                                     }
                                 } else {
-                                    double rnd1 = Math.abs(Math.random()*Math.pow(2, 64));
+                                    double rnd1 = Math.abs(Math.random() * Math.pow(2, 64));
                                     delta_in2 = rnd1;
-                                    double rnd2 = Math.abs(Math.random()*Math.pow(2, 64));
-                                    delta_out2 = rnd2;                                     
+                                    double rnd2 = Math.abs(Math.random() * Math.pow(2, 64));
+                                    delta_out2 = rnd2;
                                 }
 
                                 if (delta_in1 > 0 && delta_out1 > 0 && delta_in2 > 0 && delta_out2 > 0) {
                                     epsilon1 = 0;
-                                    if(delta_in1 + delta_out2 > 0) {
+                                    if (delta_in1 + delta_out2 > 0) {
                                         epsilon1 = 2 * abs(delta_in1 - delta_out2) / (delta_in1 + delta_out2);
                                     }
                                     epsilon2 = 0;
-                                    if(delta_in2 + delta_out1 > 0) {
+                                    if (delta_in2 + delta_out1 > 0) {
                                         epsilon2 = 2 * abs(delta_in2 - delta_out1) / (delta_in2 + delta_out1);
                                     }
                                     epsilon = (epsilon1 + epsilon2) / 2;
-                                    if(epsilon == 0) {
-                                        epsilon = Math.abs(Math.random()*Math.pow(2, 32));
-                                    }                        
+                                    if (epsilon == 0) {
+                                        epsilon = Math.abs(Math.random() * Math.pow(2, 32));
+                                    }
 
-            //                        float precession_limit=(float)((delta_time+time_lag)/wait_time);
-                                    if (epsilon < precession_limit/2) {
+                                    //                        float precession_limit=(float)((delta_time+time_lag)/wait_time);
+                                    if (epsilon < precession_limit / 2) {
                                         String[] mas = new String[8];
                                         mas[0] = item[0];
                                         mas[1] = item[1];
@@ -3651,7 +3644,7 @@ public class Utils {
                                         mas[4] = item[4];
                                         mas[5] = item[5];
                                         mas[6] = String.valueOf(epsilon);
-                                        mas[7] = String.valueOf(precession_limit/2);
+                                        mas[7] = String.valueOf(precession_limit / 2);
                                         logger.Println("CalculateTestingLink: " + mas[0] + "," + mas[1] + "," + mas[2] + "," + mas[3] + "," + mas[4] + "," + mas[5] + "," + mas[6] + "," + mas[7], logger.DEBUG);
                                         result.add(mas);
                                     } else {
@@ -3659,7 +3652,7 @@ public class Utils {
                                     }
                                 } else {
                                     logger.Println("CalculateTestingLink not streams packets: " + item[0] + "," + item[1] + "," + item[2] + "," + item[3] + "," + item[4] + "," + item[5], logger.DEBUG);
-                                }                         
+                                }
                                 ////////////////////////////////////////////////////////////                                
                             }
                         } else {
@@ -3701,44 +3694,44 @@ public class Utils {
         }
     }
 
-    //  output: ArrayList(String[](node1,id1,iface1,node2,id2,iface2))
-    public ArrayList<String[]> summaryLinks(ArrayList<String[]> links, ArrayList<String[]> dplinks, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
-        ArrayList<String[]> result = new ArrayList();
-
-        for (String[] item : dplinks) {
-            String[] mas = new String[7];
-            mas[0] = item[0];
-            mas[1] = item[1];
-            mas[2] = item[2];
-            mas[3] = item[3];
-            mas[4] = item[4];
-            mas[5] = item[5];
-            mas[6] = "dp_link";
-            result.add(mas);
-        }
-
-        Map<String, ArrayList<String>> nodes_ip_address = getIpAddress(walkInformationFromNodes);
-        for (String[] item : links) {
-            if (checkDuplicateLink(item, result, nodes_ip_address)) {
-                String[] mas = new String[7];
-                mas[0] = item[0];
-                mas[1] = item[1];
-                mas[2] = item[2];
-                mas[3] = item[3];
-                mas[4] = item[4];
-                mas[5] = item[5];
-                mas[6] = "calc_link";
-                result.add(mas);
-//                System.out.println("Link adding from links: "+item[0]+","+item[1]+","+item[2]+" <---> "+item[3]+","+item[4]+","+item[5]);
-            }
-        }
-
-        for (String[] item : result) {
-            logger.Println("Start merging dplinks ... " + item[0] + "," + item[1] + "," + item[2] + " <---> " + item[3] + "," + item[4] + "," + item[5] + " --- " + item[6], logger.DEBUG);
-        }
-
-        return result;
-    }
+//    //  output: ArrayList(String[](node1,id1,iface1,node2,id2,iface2))
+//    public ArrayList<String[]> summaryLinks(ArrayList<String[]> links, ArrayList<String[]> dplinks, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
+//        ArrayList<String[]> result = new ArrayList();
+//
+//        for (String[] item : dplinks) {
+//            String[] mas = new String[7];
+//            mas[0] = item[0];
+//            mas[1] = item[1];
+//            mas[2] = item[2];
+//            mas[3] = item[3];
+//            mas[4] = item[4];
+//            mas[5] = item[5];
+//            mas[6] = "dp_link";
+//            result.add(mas);
+//        }
+//
+//        Map<String, ArrayList<String>> nodes_ip_address = getIpAddress(walkInformationFromNodes);
+//        for (String[] item : links) {
+//            if (checkDuplicateLink(item, result, nodes_ip_address)) {
+//                String[] mas = new String[7];
+//                mas[0] = item[0];
+//                mas[1] = item[1];
+//                mas[2] = item[2];
+//                mas[3] = item[3];
+//                mas[4] = item[4];
+//                mas[5] = item[5];
+//                mas[6] = "calc_link";
+//                result.add(mas);
+////                System.out.println("Link adding from links: "+item[0]+","+item[1]+","+item[2]+" <---> "+item[3]+","+item[4]+","+item[5]);
+//            }
+//        }
+//
+//        for (String[] item : result) {
+//            logger.Println("Start merging dplinks ... " + item[0] + "," + item[1] + "," + item[2] + " <---> " + item[3] + "," + item[4] + "," + item[5] + " --- " + item[6], logger.DEBUG);
+//        }
+//
+//        return result;
+//    }
 
     public String translateHexString_to_SymbolString(String str) {
         String result = str;
@@ -3758,7 +3751,7 @@ public class Utils {
                         out.append((char) dec);
                     }
                 }
-                if(out.isEmpty())
+                if (out.isEmpty())
                     return str;
                 else
                     result = out.toString();
@@ -3972,7 +3965,7 @@ public class Utils {
                     }
                 }
             }
-         
+
         }
 
         // removes ARP_mac records if is am link
@@ -4195,7 +4188,7 @@ public class Utils {
         return result;
     }
 
-//    // Output format: ArrayList
+    //    // Output format: ArrayList
 //    //    mac --> ip, node, if_iface, name_iface
 //    public void CalculateARPMAC() {        
 //        ArrayList<String[]> result = new ArrayList();
@@ -4466,14 +4459,14 @@ public class Utils {
 
         if (with_interface_maping) {
             Map<String, Map<String, String>> ifaceMaping = indexingInterfacesFromNodes.get("IfaceMaping");
-            if(ifaceMaping.get(node) != null && ifaceMaping.get(node).get(id_iface) != null) {
+            if (ifaceMaping.get(node) != null && ifaceMaping.get(node).get(id_iface) != null) {
                 id_iface = ifaceMaping.get(node).get(id_iface);
             }
         }
-        
+
         Map<String, Map<String, String>> ifDescr = indexingInterfacesFromNodes.get("ifDescr");
-        if(ifDescr != null) {
-            if(ifDescr.get(node) != null && ifDescr.get(node).get(id_iface) != null) {
+        if (ifDescr != null) {
+            if (ifDescr.get(node) != null && ifDescr.get(node).get(id_iface) != null) {
                 result[0] = id_iface;
                 result[1] = replaceDelimiter(translateHexString_to_SymbolString(ifDescr.get(node).get(id_iface)));
             }
@@ -4481,7 +4474,7 @@ public class Utils {
         return result;
     }
 
-//    public ArrayList<String[]> GetNodeCommunityVersion() {
+    //    public ArrayList<String[]> GetNodeCommunityVersion() {
 //        ArrayList<String[]> result = new ArrayList();
 //        
 //        try {
@@ -4546,7 +4539,7 @@ public class Utils {
         return result;
     }
 
-//    private String[] GetRemotePort(String node_remote, String id_iface_remote, String name_iface_remote, Map<String, Map<String, ArrayList>> walkInformationFromNodes, Map<String, ArrayList<String>> hash_ip) {
+    //    private String[] GetRemotePort(String node_remote, String id_iface_remote, String name_iface_remote, Map<String, Map<String, ArrayList>> walkInformationFromNodes, Map<String, ArrayList<String>> hash_ip) {
 //        String[] result = new String[2];
 //        result[0]=id_iface_remote;
 //        result[1]=ReplaceDelimiter(TranslateHexString_to_SymbolString(name_iface_remote));
@@ -4711,70 +4704,70 @@ public class Utils {
 //        } 
 //        return true;
 //    }
-    public boolean checkUniqalNode(String node, Map<String, String> info_nodes, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
-        for (Map.Entry<String, String> entry : info_nodes.entrySet()) {
-            String node1 = entry.getKey();
-            ArrayList<String> list_ip = getIpAddressFromNode(walkInformationFromNodes, node1);
-            if (list_ip.contains(node)) {
-                return false;
-            }
-        }
-        return true;
-    }
+//    public boolean checkUniqalNode(String node, Map<String, String> info_nodes, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
+//        for (Map.Entry<String, String> entry : info_nodes.entrySet()) {
+//            String node1 = entry.getKey();
+//            ArrayList<String> list_ip = getIpAddressFromNode(walkInformationFromNodes, node1);
+//            if (list_ip.contains(node)) {
+//                return false;
+//            }
+//        }
+//        return true;
+//    }
 
-    public String duplicateNodeWithNode(String node, Map<String, String> info_nodes, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
-        String duplicate_with_node = "";
-        for (Map.Entry<String, String> entry : info_nodes.entrySet()) {
-            String node1 = entry.getKey();
-            ArrayList<String> list_ip = getIpAddressFromNode(walkInformationFromNodes, node1);
-            int pos = list_ip.indexOf(node);
-            if (pos >= 0) {
-                duplicate_with_node = list_ip.get(pos) + ";" + info_nodes.get(list_ip.get(pos));
-                break;
-            }
-        }
-        return duplicate_with_node;
-    }
+//    public String duplicateNodeWithNode(String node, Map<String, String> info_nodes, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
+//        String duplicate_with_node = "";
+//        for (Map.Entry<String, String> entry : info_nodes.entrySet()) {
+//            String node1 = entry.getKey();
+//            ArrayList<String> list_ip = getIpAddressFromNode(walkInformationFromNodes, node1);
+//            int pos = list_ip.indexOf(node);
+//            if (pos >= 0) {
+//                duplicate_with_node = list_ip.get(pos) + ";" + info_nodes.get(list_ip.get(pos));
+//                break;
+//            }
+//        }
+//        return duplicate_with_node;
+//    }
 
-    public ArrayList<String[]> checkDuplicateLinkList(ArrayList<String[]> links_new, ArrayList<String[]> links, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
-        Map<String, ArrayList<String>> nodes_ip_address = getIpAddress(walkInformationFromNodes);
-        for (String[] item : links_new) {
-            if (checkDuplicateLink(item, links, nodes_ip_address)) {
-                logger.Println("CheckDuplicateLinkList: adding link: " + item[0] + "," + item[1] + "," + item[2] + " <---> " + item[3] + "," + item[4] + "," + item[5], logger.DEBUG);
-                links.add(item);
-            }
-        }
-        return links;
-    }
+//    public ArrayList<String[]> checkDuplicateLinkList(ArrayList<String[]> links_new, ArrayList<String[]> links, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
+//        Map<String, ArrayList<String>> nodes_ip_address = getIpAddress(walkInformationFromNodes);
+//        for (String[] item : links_new) {
+//            if (checkDuplicateLink(item, links, nodes_ip_address)) {
+//                logger.Println("CheckDuplicateLinkList: adding link: " + item[0] + "," + item[1] + "," + item[2] + " <---> " + item[3] + "," + item[4] + "," + item[5], logger.DEBUG);
+//                links.add(item);
+//            }
+//        }
+//        return links;
+//    }
 
-    public ArrayList<String> duplicateNodesList(Map<String, String[]> info_nodes, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
-        ArrayList<String> result = new ArrayList();
-        Map<String, ArrayList<String>> nodes_ip_address = getIpAddress(walkInformationFromNodes);
-        ArrayList<String> nodes_list = new ArrayList();
-        for (Map.Entry<String, String[]> entry : info_nodes.entrySet()) {
-            nodes_list.add(entry.getKey());
-        }
-
-        for (int i = 0; i < nodes_list.size(); i++) {
-            String node1 = nodes_list.get(i);
-            ArrayList<String> list_ip = nodes_ip_address.get(node1);
-            if (list_ip == null) {
-                list_ip = new ArrayList();
-                list_ip.add(node1);
-            }
-            for (int j = i + 1; j < nodes_list.size(); j++) {
-                String node2 = nodes_list.get(j);
-                if (list_ip.contains(node2)) {
-                    result.add(node2);
-                    nodes_list.remove(j);
-                    logger.Println("DuplicateNodesList: duplicate node: " + node1 + " <---> " + node2, logger.DEBUG);
-                    j--;
-                }
-            }
-        }
-
-        return result;
-    }
+//    public ArrayList<String> duplicateNodesList(Map<String, String[]> info_nodes, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
+//        ArrayList<String> result = new ArrayList();
+//        Map<String, ArrayList<String>> nodes_ip_address = getIpAddress(walkInformationFromNodes);
+//        ArrayList<String> nodes_list = new ArrayList();
+//        for (Map.Entry<String, String[]> entry : info_nodes.entrySet()) {
+//            nodes_list.add(entry.getKey());
+//        }
+//
+//        for (int i = 0; i < nodes_list.size(); i++) {
+//            String node1 = nodes_list.get(i);
+//            ArrayList<String> list_ip = nodes_ip_address.get(node1);
+//            if (list_ip == null) {
+//                list_ip = new ArrayList();
+//                list_ip.add(node1);
+//            }
+//            for (int j = i + 1; j < nodes_list.size(); j++) {
+//                String node2 = nodes_list.get(j);
+//                if (list_ip.contains(node2)) {
+//                    result.add(node2);
+//                    nodes_list.remove(j);
+//                    logger.Println("DuplicateNodesList: duplicate node: " + node1 + " <---> " + node2, logger.DEBUG);
+//                    j--;
+//                }
+//            }
+//        }
+//
+//        return result;
+//    }
 
     public boolean checkDuplicateLink(String[] link, ArrayList<String[]> links, Map<String, ArrayList<String>> nodes_ip_address) {
         // get unique links(remove mirroring links)
@@ -4878,7 +4871,7 @@ public class Utils {
         return result;
     }
 
-//    public ArrayList<String[]> MergingLinks(ArrayList<String[]> links_new, ArrayList<String[]> links, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
+    //    public ArrayList<String[]> MergingLinks(ArrayList<String[]> links_new, ArrayList<String[]> links, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
 //        ArrayList<String[]> result = new ArrayList();
 //
 //        if(links_new.size() == 0 && links.size() > 0) {
@@ -4974,7 +4967,7 @@ public class Utils {
         return -1;
     }
 
-//    public boolean WriteToMapFile(String filename, String buff, Map<String, String> info_nodes, ArrayList<String[]> links, ArrayList<String[]> ARP_MAC, Map<String, String> excluded_nodes, String host_time_live, String history_dir, int history_num_days) {
+    //    public boolean WriteToMapFile(String filename, String buff, Map<String, String> info_nodes, ArrayList<String[]> links, ArrayList<String[]> ARP_MAC, Map<String, String> excluded_nodes, String host_time_live, String history_dir, int history_num_days) {
 //        BufferedWriter outFile = null;
 //        BufferedWriter outBuff = null;
 //        File file = new File(filename);
@@ -5350,8 +5343,8 @@ public class Utils {
 //        return result;
 //    }    
     public Map rescanInformationFromNodes(Map informationFromNodes,
-            ArrayList<String> community_list, ArrayList<String> include_list,
-            Map<String, String[]> snmp_accounts_priority, ArrayList<String> net_list) {
+                                          ArrayList<String> community_list, ArrayList<String> include_list,
+                                          Map<String, String[]> snmp_accounts_priority, ArrayList<String> net_list) {
 
         if (informationFromNodes.size() == 3) {
 //            ru.kos.neb.neb_lib.Utils lib_utils = new ru.kos.neb.neb_lib.Utils();
@@ -5420,7 +5413,7 @@ public class Utils {
                 logger.Println("list_ip_test=" + ip_test, logger.DEBUG);
             }
             logger.Println("list_ip_test size = " + list_ip_test.size(), logger.DEBUG);
-            
+
             if (!list_ip_test.isEmpty()) {
                 logger.Println("Scanning recursive list ...", logger.INFO);
 
@@ -5437,7 +5430,7 @@ public class Utils {
                     }
                 }
                 logger.Println("list_ip ping size = " + list_ip.size(), logger.DEBUG);
-                
+
                 // scan ports
 //                watch_Telemetry_Lib = new Watch_Telemetry_Lib("Scan ports for nodes");
 //                watch_Telemetry_Lib.start();
@@ -5451,9 +5444,9 @@ public class Utils {
                         logger.Println("Scan ports discovery: " + item[0], logger.DEBUG);
                     }
                 }
-                logger.Println("Scan ports list_ip size = " + list_ip.size(), logger.DEBUG);            
-                 
-                
+                logger.Println("Scan ports list_ip size = " + list_ip.size(), logger.DEBUG);
+
+
                 logger.Println("Start scanning snmp ip list ...", logger.DEBUG);
                 ArrayList<String[]> node_community_version = new ArrayList();
 //                watch_Telemetry_Lib = new Watch_Telemetry_Lib("Rescan scanning snmp ip list");
@@ -5471,14 +5464,14 @@ public class Utils {
                 logger.Println("Start Rescanning ...", logger.DEBUG);
                 node_community_version = rescanSNMPVersion(node_community_version, Neb.timeout * 2, Neb.retries);
                 logger.Println("Stop Rescanning.", logger.DEBUG);
-                
-                if(!node_community_version.isEmpty()) {
+
+                if (!node_community_version.isEmpty()) {
                     logger.Println("node_community_version.size() = " + node_community_version.size(), logger.DEBUG);
                     logger.Println("Start get information from nodes ...", logger.INFO);
                     SNMP_information snmp_information = new SNMP_information();
                     Map nodes_information_rescan = snmp_information.getInformationFromNodes(node_community_version);
                     logger.Println("snmp_information.size() = " + nodes_information_rescan.size(), logger.DEBUG);
-                    logger.Println("Stop get information from nodes.", logger.INFO);                
+                    logger.Println("Stop get information from nodes.", logger.INFO);
 
                     nodes_information_rescan = uniqal_Nodes_Information(nodes_information_rescan);
 
@@ -5490,10 +5483,10 @@ public class Utils {
                     }
 
                     // merging informationFromNodes and nodes_information
-                    if(informationFromNodes.get("nodes_information") != null) {
-                        ((Map)informationFromNodes.get("nodes_information")).putAll(nodes_information_rescan);
-                    } 
-                    
+                    if (informationFromNodes.get("nodes_information") != null) {
+                        ((Map) informationFromNodes.get("nodes_information")).putAll(nodes_information_rescan);
+                    }
+
 
                     Map<String, String> ip_from_nodes = getIpFromNodes(nodes_information_rescan, net_list, Neb.not_correct_networks);
                     exclude_list.putAll(ip_from_nodes);
@@ -5501,9 +5494,9 @@ public class Utils {
                         exclude_list.put(ip, ip);
                     }
                     informationFromNodes.put("exclude_list", exclude_list);
-                    
+
                     // translate node_protocol_accounts Array to ArrayList
-                    Map<String, String[]> node_protocol_accounts_new = translateNodeProtocolAccountsToList(node_community_version);                    
+                    Map<String, String[]> node_protocol_accounts_new = translateNodeProtocolAccountsToList(node_community_version);
 
                     // merging node_protocol_accounts
                     ((Map<String, String[]>) informationFromNodes.get("node_protocol_accounts")).putAll(node_protocol_accounts_new);
@@ -5539,130 +5532,130 @@ public class Utils {
         return informationFromNodes;
     }
 
-    public ArrayList merge_nodes_information(ArrayList new_list, ArrayList old_list, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
-        ArrayList result = new ArrayList();
-
-        Map<String, String> information_nodes_res = new HashMap<>();
-        ArrayList<String> exclude_list = new ArrayList();
-
-        Map<String, String> information_nodes_new = (Map<String, String>) new_list.get(0);
-        Map<String, String> information_nodes_old = (Map<String, String>) old_list.get(0);
-
-        ArrayList<String[]> dplinks_new = (ArrayList<String[]>) new_list.get(1);
-        ArrayList<String[]> dplinks_old = (ArrayList<String[]>) old_list.get(1);
-
-        // merging node information
-        for (Map.Entry<String, String> entry : information_nodes_new.entrySet()) {
-            String node_new = entry.getKey();
-            String node_info_new = entry.getValue();
-
-            boolean find = false;
-            for (Map.Entry<String, String> entry1 : information_nodes_old.entrySet()) {
-                String node_old = entry1.getKey();
-                String node_info_old = entry1.getValue();
-
-                if (node_new.equals(node_old)) {
-                    String[] mas = node_info_old.split(";", -1)[0].split("\\|");
-                    if (mas.length != 3) {
-                        String[] mas1 = node_info_new.split(";", -1)[0].split("\\|");
-                        if (mas1.length != 3) {
-                            if (node_new.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
-                                exclude_list.add(node_new);
-                            }
-                        }
-                        information_nodes_res.put(node_new, node_info_new);
-                    } else {
-                        information_nodes_res.put(node_old, node_info_old);
-                    }
-                    find = true;
-                    break;
-                }
-            }
-            if (!find) {
-//                String[] mas = node_info_new.split(";", -1)[0].split("\\|");
-//                if(mas.length != 3) {
-//                    if(node_new.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
-//                       exclude_list.add(node_new);
-//                    }                        
+//    public ArrayList merge_nodes_information(ArrayList new_list, ArrayList old_list, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
+//        ArrayList result = new ArrayList();
+//
+//        Map<String, String> information_nodes_res = new HashMap<>();
+//        ArrayList<String> exclude_list = new ArrayList();
+//
+//        Map<String, String> information_nodes_new = (Map<String, String>) new_list.get(0);
+//        Map<String, String> information_nodes_old = (Map<String, String>) old_list.get(0);
+//
+//        ArrayList<String[]> dplinks_new = (ArrayList<String[]>) new_list.get(1);
+//        ArrayList<String[]> dplinks_old = (ArrayList<String[]>) old_list.get(1);
+//
+//        // merging node information
+//        for (Map.Entry<String, String> entry : information_nodes_new.entrySet()) {
+//            String node_new = entry.getKey();
+//            String node_info_new = entry.getValue();
+//
+//            boolean find = false;
+//            for (Map.Entry<String, String> entry1 : information_nodes_old.entrySet()) {
+//                String node_old = entry1.getKey();
+//                String node_info_old = entry1.getValue();
+//
+//                if (node_new.equals(node_old)) {
+//                    String[] mas = node_info_old.split(";", -1)[0].split("\\|");
+//                    if (mas.length != 3) {
+//                        String[] mas1 = node_info_new.split(";", -1)[0].split("\\|");
+//                        if (mas1.length != 3) {
+//                            if (node_new.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
+//                                exclude_list.add(node_new);
+//                            }
+//                        }
+//                        information_nodes_res.put(node_new, node_info_new);
+//                    } else {
+//                        information_nodes_res.put(node_old, node_info_old);
+//                    }
+//                    find = true;
+//                    break;
 //                }
-                information_nodes_res.put(node_new, node_info_new);
-            }
-        }
-
-        for (Map.Entry<String, String> entry : information_nodes_old.entrySet()) {
-            String node_old = entry.getKey();
-            String node_info_old = entry.getValue();
-            boolean find = false;
-            for (Map.Entry<String, String> entry1 : information_nodes_new.entrySet()) {
-                String node_new = entry1.getKey();
-                if (node_old.equals(node_new)) {
-                    find = true;
-                    break;
-                }
-            }
-            if (!find) {
-                String[] mas = node_info_old.split(";", -1)[0].split("\\|");
-                if (mas.length != 3) {
-                    if (node_old.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
-                        exclude_list.add(node_old);
-                    }
-                }
-                information_nodes_res.put(node_old, node_info_old);
-            }
-        }
-
-        // merging links
-        Map<String, ArrayList<String>> nodes_ip_address = getIpAddress(walkInformationFromNodes);
-        for (String[] item : dplinks_new) {
-            if (checkDuplicateLink(item, result, nodes_ip_address)) {
-                dplinks_old.add(item);
-            }
-        }
-
-        // merging walk info
-        Map<String, Map<String, ArrayList>> walkInformation_new = (Map<String, Map<String, ArrayList>>) new_list.get(2);
-        Map<String, Map<String, ArrayList>> walkInformation_old = (Map<String, Map<String, ArrayList>>) old_list.get(2);
-
-        Map<String, Map<String, ArrayList>> walkInformation = mergingWalk(walkInformation_new, walkInformation_old);
-
-//        for (Map.Entry<String, Map<String, ArrayList>> entry : walkInformation_new.entrySet()) {
-//            String key = entry.getKey();
-//            Map<String, ArrayList> val = entry.getValue();
-//            Map<String, ArrayList> val_all = walkInformation.get(key);
-//            val_all.putAll(val);
-//            walkInformation.put(key, val_all);
+//            }
+//            if (!find) {
+////                String[] mas = node_info_new.split(";", -1)[0].split("\\|");
+////                if(mas.length != 3) {
+////                    if(node_new.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
+////                       exclude_list.add(node_new);
+////                    }
+////                }
+//                information_nodes_res.put(node_new, node_info_new);
+//            }
 //        }
-        // merging exclude list
-        ArrayList<String> exclude_old = (ArrayList<String>) old_list.get(3);
-        for (String item : exclude_list) {
-            if (!exclude_old.contains(item)) {
-                exclude_old.add(item);
-            }
-        }
-
-        // merging node_community_version
-        ArrayList<String[]> node_community_version_old = (ArrayList<String[]>) old_list.get(4);
-        for (String[] item : (ArrayList<String[]>) new_list.get(4)) {
-            boolean find = false;
-            for (String[] item_old : node_community_version_old) {
-                if (item_old[0].equals(item[0])) {
-                    find = true;
-                    break;
-                }
-            }
-            if (!find) {
-                node_community_version_old.add(item);
-            }
-        }
-
-        result.add(information_nodes_res);
-        result.add(dplinks_old);
-        result.add(walkInformation);
-        result.add(exclude_old);
-        result.add(node_community_version_old);
-
-        return result;
-    }
+//
+//        for (Map.Entry<String, String> entry : information_nodes_old.entrySet()) {
+//            String node_old = entry.getKey();
+//            String node_info_old = entry.getValue();
+//            boolean find = false;
+//            for (Map.Entry<String, String> entry1 : information_nodes_new.entrySet()) {
+//                String node_new = entry1.getKey();
+//                if (node_old.equals(node_new)) {
+//                    find = true;
+//                    break;
+//                }
+//            }
+//            if (!find) {
+//                String[] mas = node_info_old.split(";", -1)[0].split("\\|");
+//                if (mas.length != 3) {
+//                    if (node_old.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
+//                        exclude_list.add(node_old);
+//                    }
+//                }
+//                information_nodes_res.put(node_old, node_info_old);
+//            }
+//        }
+//
+//        // merging links
+//        Map<String, ArrayList<String>> nodes_ip_address = getIpAddress(walkInformationFromNodes);
+//        for (String[] item : dplinks_new) {
+//            if (checkDuplicateLink(item, result, nodes_ip_address)) {
+//                dplinks_old.add(item);
+//            }
+//        }
+//
+//        // merging walk info
+//        Map<String, Map<String, ArrayList>> walkInformation_new = (Map<String, Map<String, ArrayList>>) new_list.get(2);
+//        Map<String, Map<String, ArrayList>> walkInformation_old = (Map<String, Map<String, ArrayList>>) old_list.get(2);
+//
+//        Map<String, Map<String, ArrayList>> walkInformation = mergingWalk(walkInformation_new, walkInformation_old);
+//
+////        for (Map.Entry<String, Map<String, ArrayList>> entry : walkInformation_new.entrySet()) {
+////            String key = entry.getKey();
+////            Map<String, ArrayList> val = entry.getValue();
+////            Map<String, ArrayList> val_all = walkInformation.get(key);
+////            val_all.putAll(val);
+////            walkInformation.put(key, val_all);
+////        }
+//        // merging exclude list
+//        ArrayList<String> exclude_old = (ArrayList<String>) old_list.get(3);
+//        for (String item : exclude_list) {
+//            if (!exclude_old.contains(item)) {
+//                exclude_old.add(item);
+//            }
+//        }
+//
+//        // merging node_community_version
+//        ArrayList<String[]> node_community_version_old = (ArrayList<String[]>) old_list.get(4);
+//        for (String[] item : (ArrayList<String[]>) new_list.get(4)) {
+//            boolean find = false;
+//            for (String[] item_old : node_community_version_old) {
+//                if (item_old[0].equals(item[0])) {
+//                    find = true;
+//                    break;
+//                }
+//            }
+//            if (!find) {
+//                node_community_version_old.add(item);
+//            }
+//        }
+//
+//        result.add(information_nodes_res);
+//        result.add(dplinks_old);
+//        result.add(walkInformation);
+//        result.add(exclude_old);
+//        result.add(node_community_version_old);
+//
+//        return result;
+//    }
 
     public Map<String, Map<String, ArrayList>> mergingWalk(Map<String, Map<String, ArrayList>> walkInformation_new, Map<String, Map<String, ArrayList>> walkInformation_old) {
         Map<String, Map<String, ArrayList>> result = new HashMap(walkInformation_old);
@@ -5685,21 +5678,21 @@ public class Utils {
         for (Map.Entry<String, ArrayList<String[]>> entry : area_node_community_version.entrySet()) {
             String area = entry.getKey();
             ArrayList<String[]> node_community_version = entry.getValue();
-            
-            logger.Println("Start GetARP area "+area+"...", logger.DEBUG);
+
+            logger.Println("Start GetARP area " + area + "...", logger.DEBUG);
             Map<String, String> ARP = getARP(node_community_version);
-            if(DEBUG) mapToFile(ARP, Neb.debug_folder+"/ARP_"+area, Neb.DELAY_WRITE_FILE);
-            logger.Println("Stop GetARP area "+area+". size="+ARP.size(), logger.DEBUG);
+            if (DEBUG) mapToFile(ARP, Neb.debug_folder + "/ARP_" + area, Neb.DELAY_WRITE_FILE);
+            logger.Println("Stop GetARP area " + area + ". size=" + ARP.size(), logger.DEBUG);
 
-            logger.Println("Start GetMAC area "+area+"...", logger.DEBUG);
+            logger.Println("Start GetMAC area " + area + "...", logger.DEBUG);
             Map<String, Map<String, ArrayList>> MAC = getMAC(node_community_version);
-            if(DEBUG) mapToFile(MAC, Neb.debug_folder+"/MAC_"+area, Neb.DELAY_WRITE_FILE);
-            logger.Println("Stop GetMAC area "+area+". size="+MAC.size(), logger.DEBUG);
+            if (DEBUG) mapToFile(MAC, Neb.debug_folder + "/MAC_" + area, Neb.DELAY_WRITE_FILE);
+            logger.Println("Stop GetMAC area " + area + ". size=" + MAC.size(), logger.DEBUG);
 
-            if(Neb.area_node_ifaceid_ifacename.get(area) != null) {
-                logger.Println("Start svodka ARP MAC area "+area+"...", logger.DEBUG);
+            if (Neb.area_node_ifaceid_ifacename.get(area) != null) {
+                logger.Println("Start svodka ARP MAC area " + area + "...", logger.DEBUG);
                 ArrayList<String[]> ARP_MAC = arpmac(MAC, ARP, node_community_version, Neb.area_node_ifaceid_ifacename.get(area));
-                logger.Println("Stop svodka ARP MAC area "+area+". size="+ARP_MAC.size(), logger.DEBUG);
+                logger.Println("Stop svodka ARP MAC area " + area + ". size=" + ARP_MAC.size(), logger.DEBUG);
                 area_ARP_MAC.put(area, ARP_MAC);
             }
 //            if(DEBUG) mapToFile((Map)area_ARP_MAC, Neb.debug_folder+"/area_ARP_MAC", Neb.DELAY_WRITE_FILE);            
@@ -5709,11 +5702,11 @@ public class Utils {
     }
 
     public Map scanInformationFromNodes(ArrayList<String> network_list,
-            ArrayList<String> ip_list, ArrayList<String> community_list,
-            Map<String, String> exclude_list,
+                                        ArrayList<String> ip_list, ArrayList<String> community_list,
+                                        Map<String, String> exclude_list,
 //            ArrayList<String> include_sysDescr_cli_matching,
-            Map<String, String[]> snmp_accounts_priority,
-            ArrayList<String> net_list) {
+                                        Map<String, String[]> snmp_accounts_priority,
+                                        ArrayList<String> net_list) {
         Map result = new HashMap();
 
         logger.Println("Scanning networks ...", logger.INFO);
@@ -5753,8 +5746,8 @@ public class Utils {
                     logger.Println("Scan ports: " + item[0], logger.DEBUG);
                 }
             }
-            logger.Println("Scan ports list_ip size = " + list_ip.size(), logger.DEBUG);            
-            
+            logger.Println("Scan ports list_ip size = " + list_ip.size(), logger.DEBUG);
+
             // output
 //            watch_Telemetry_Lib = new Watch_Telemetry_Lib("SnmpScan for nodes");
 //            watch_Telemetry_Lib.start();
@@ -5781,8 +5774,8 @@ public class Utils {
                     logger.Println("Scan ports: " + item[0], logger.DEBUG);
                 }
             }
-            logger.Println("Scan ports list_ip size = " + ip_list.size(), logger.DEBUG);            
-            
+            logger.Println("Scan ports list_ip size = " + ip_list.size(), logger.DEBUG);
+
             logger.Println("Start scanning snmp ip list ...", logger.DEBUG);
 //            watch_Telemetry_Lib = new Watch_Telemetry_Lib("Scanning snmp ip list");
 //            watch_Telemetry_Lib.start();           
@@ -5802,14 +5795,14 @@ public class Utils {
         logger.Println("Stop Rescanning.", logger.DEBUG);
         logger.Println("node_community_version rescanSNMPVersion size = " + node_community_version.size(), logger.DEBUG);
         logger.Println("End scanning networks.", logger.INFO);
-        
-        if(!node_community_version.isEmpty()) {
+
+        if (!node_community_version.isEmpty()) {
             logger.Println("Start get information from nodes ...", logger.INFO);
             SNMP_information snmp_information = new SNMP_information();
             Map nodes_information = snmp_information.getInformationFromNodes(node_community_version);
 
             logger.Println("Stop get information from nodes.", logger.INFO);
-        
+
             ArrayList<String> networks = new ArrayList();
             networks.addAll(network_list);
             networks.addAll(ip_list);
@@ -5819,7 +5812,7 @@ public class Utils {
             for (Map.Entry<String, Map> entry : ((Map<String, Map>) nodes_information).entrySet()) {
                 String str = gson.toJson(entry.getValue());
                 logger.Println("nodes_information=" + entry.getKey() + " - " + str, logger.DEBUG);
-    //            System.out.println("nodes_information="+entry.getKey()+" - "+str);
+                //            System.out.println("nodes_information="+entry.getKey()+" - "+str);
             }
             logger.Println("nodes_information size = " + nodes_information.size(), logger.DEBUG);
             result.put("nodes_information", nodes_information);
@@ -6210,148 +6203,148 @@ public class Utils {
 //        }
 //        return result;
 //    }
-    public ArrayList nodes_Links_Summary(ArrayList informationFromNodes, Map<String, Map<String, ArrayList>> walkInformationFromNodes, ArrayList<String[]> arp_mac) {
-        ArrayList result = new ArrayList();
-
-        Map<String, String> nodes_info = (Map<String, String>) informationFromNodes.get(0);
-        ArrayList<String[]> links = (ArrayList<String[]>) informationFromNodes.get(1);
-        Map<String, Map<String, ArrayList>> walks_info = (Map<String, Map<String, ArrayList>>) informationFromNodes.get(2);
-        ArrayList<String> exclude_list = (ArrayList<String>) informationFromNodes.get(3);
-//        ArrayList<String[]> node_community_version = (ArrayList<String[]>)informationFromNodes.get(4);
-
-        // node ip address to map
-        Map<String, String> ip_ip = new HashMap();
-        for (Map.Entry<String, String> entry : nodes_info.entrySet()) {
-            String node = entry.getKey();
-            ArrayList<String> list_ip = getIpAddressFromNode(walkInformationFromNodes, node);
-            for (String item : list_ip) {
-                if (item.equals("127.0.0.1")) {
-                    ip_ip.put("127.0.0.1", "127.0.0.1");
-                } else {
-                    ip_ip.put(item, list_ip.get(0));
-                }
-            }
-        }
-
-        // delete duplicate nodes and adding to ip_ip
-        Map<String, String> nodes_info_new = new HashMap();
-        for (Map.Entry<String, String> entry : nodes_info.entrySet()) {
-            String node = entry.getKey();
-            String tmp = ip_ip.get(entry.getKey());
-            if (tmp != null) {
-                node = tmp;
-            } else {
-                ip_ip.put(node, node);
-            }
-            if (!node.equals("127.0.0.1")) {
-                String str_node_info_new = nodes_info_new.get(node);
-                if (str_node_info_new != null) {
-                    if (str_node_info_new.split(";", -1)[0].split("\\|", -1).length == 1) {
-                        if (entry.getValue().split(";", -1)[0].split("\\|", -1).length > 1) {
-                            nodes_info_new.remove(node);
-                            nodes_info_new.put(node, entry.getValue());
-                            logger.Println("Rename duplicate node: " + node + ";" + str_node_info_new + " -  rename to node: " + entry.getKey() + ";" + entry.getValue(), logger.DEBUG);
-                        } else {
-                            logger.Println("Duplicate node: " + entry.getKey() + ";" + entry.getValue() + " - exist node: " + node + ";" + str_node_info_new, logger.DEBUG);
-                        }
-                    } else {
-                        logger.Println("Duplicate node: " + entry.getKey() + ";" + entry.getValue() + " - exist node: " + node + ";" + str_node_info_new, logger.DEBUG);
-                    }
-                } else {
-                    nodes_info_new.put(node, entry.getValue());
-                }
-            }
-        }
-
-        // rename and delete unused links
-        ArrayList<String[]> links_new = new ArrayList();
-        ArrayList<String[]> excluded_links = new ArrayList();
-        for (String[] item : links) {
-            if (item.length == 8) {
-                String aliase1 = ip_ip.get(item[0]);
-                String aliase2 = ip_ip.get(item[3]);
-
-                if (aliase1 != null && aliase2 != null) {
-                    if (!item[0].equals(aliase1) || !item[3].equals(aliase2)) {
-                        logger.Println("Rename link: " + item[0] + " " + item[2] + " <---> " + item[3] + " " + item[5] + " to: " + aliase1 + " " + item[2] + " <---> " + aliase2 + " " + item[5], logger.DEBUG);
-                    }
-
-                    String[] mas = new String[8];
-                    mas[0] = aliase1;
-                    mas[1] = item[1];
-                    mas[2] = item[2];
-                    mas[3] = aliase2;
-                    mas[4] = item[4];
-                    mas[5] = item[5];
-                    mas[6] = item[6];
-                    mas[7] = item[7];
-                    links_new.add(mas);
-                } else {
-                    excluded_links.add(item);
-                }
-            } else {
-                loggingArray(item, "Delete link from Nodes_Links_Summary", logger.DEBUG);
-            }
-        }
-
-        // rename and delete walks_info
-        Map<String, Map<String, ArrayList>> walks_info_new = new HashMap();
-        for (Map.Entry<String, Map<String, ArrayList>> entry : walks_info.entrySet()) {
-            String key = entry.getKey();
-            Map<String, ArrayList> val = entry.getValue();
-            Map<String, ArrayList> map_tmp = new HashMap();
-            for (Map.Entry<String, ArrayList> entry1 : val.entrySet()) {
-                String node = ip_ip.get(entry1.getKey());
-                ArrayList list = entry1.getValue();
-                if (node != null) {
-                    map_tmp.put(node, list);
-                }
-            }
-            walks_info_new.put(key, map_tmp);
-        }
-
-        // make node_community_version from nodes_info_new
-        ArrayList<String[]> node_community_version = new ArrayList();
-        for (Map.Entry<String, String> entry : nodes_info_new.entrySet()) {
-            String node = entry.getKey();
-            String[] mas = entry.getValue().split(";", -1)[0].split("\\|");
-            if (mas.length == 3) {
-                String[] mas1 = new String[3];
-                mas1[0] = node;
-                mas1[1] = mas[1];
-                mas1[2] = mas[2];
-                node_community_version.add(mas1);
-            }
-        }
-
-        // rename arp_mac
-        ArrayList arp_mac_new = new ArrayList();
-        for (String[] item : arp_mac) {
-            String node = ip_ip.get(item[0]);
-            if (node != null) {
-                if (!item[0].equals(node)) {
-                    logger.Println("Rename arp_mac: " + item[0] + " --- " + node, logger.DEBUG);
-                }
-                String[] mas = new String[5];
-                mas[0] = node;
-                mas[1] = item[1];
-                mas[2] = item[2];
-                mas[3] = item[3];
-                mas[4] = item[4];
-                arp_mac_new.add(mas);
-            }
-        }
-
-        result.add(nodes_info_new);
-        result.add(links_new);
-        result.add(walks_info_new);
-        result.add(exclude_list);
-        result.add(node_community_version);
-        result.add(arp_mac_new);
-        result.add(excluded_links);
-
-        return result;
-    }
+//    public ArrayList nodes_Links_Summary(ArrayList informationFromNodes, Map<String, Map<String, ArrayList>> walkInformationFromNodes, ArrayList<String[]> arp_mac) {
+//        ArrayList result = new ArrayList();
+//
+//        Map<String, String> nodes_info = (Map<String, String>) informationFromNodes.get(0);
+//        ArrayList<String[]> links = (ArrayList<String[]>) informationFromNodes.get(1);
+//        Map<String, Map<String, ArrayList>> walks_info = (Map<String, Map<String, ArrayList>>) informationFromNodes.get(2);
+//        ArrayList<String> exclude_list = (ArrayList<String>) informationFromNodes.get(3);
+////        ArrayList<String[]> node_community_version = (ArrayList<String[]>)informationFromNodes.get(4);
+//
+//        // node ip address to map
+//        Map<String, String> ip_ip = new HashMap();
+//        for (Map.Entry<String, String> entry : nodes_info.entrySet()) {
+//            String node = entry.getKey();
+//            ArrayList<String> list_ip = getIpAddressFromNode(walkInformationFromNodes, node);
+//            for (String item : list_ip) {
+//                if (item.equals("127.0.0.1")) {
+//                    ip_ip.put("127.0.0.1", "127.0.0.1");
+//                } else {
+//                    ip_ip.put(item, list_ip.get(0));
+//                }
+//            }
+//        }
+//
+//        // delete duplicate nodes and adding to ip_ip
+//        Map<String, String> nodes_info_new = new HashMap();
+//        for (Map.Entry<String, String> entry : nodes_info.entrySet()) {
+//            String node = entry.getKey();
+//            String tmp = ip_ip.get(entry.getKey());
+//            if (tmp != null) {
+//                node = tmp;
+//            } else {
+//                ip_ip.put(node, node);
+//            }
+//            if (!node.equals("127.0.0.1")) {
+//                String str_node_info_new = nodes_info_new.get(node);
+//                if (str_node_info_new != null) {
+//                    if (str_node_info_new.split(";", -1)[0].split("\\|", -1).length == 1) {
+//                        if (entry.getValue().split(";", -1)[0].split("\\|", -1).length > 1) {
+//                            nodes_info_new.remove(node);
+//                            nodes_info_new.put(node, entry.getValue());
+//                            logger.Println("Rename duplicate node: " + node + ";" + str_node_info_new + " -  rename to node: " + entry.getKey() + ";" + entry.getValue(), logger.DEBUG);
+//                        } else {
+//                            logger.Println("Duplicate node: " + entry.getKey() + ";" + entry.getValue() + " - exist node: " + node + ";" + str_node_info_new, logger.DEBUG);
+//                        }
+//                    } else {
+//                        logger.Println("Duplicate node: " + entry.getKey() + ";" + entry.getValue() + " - exist node: " + node + ";" + str_node_info_new, logger.DEBUG);
+//                    }
+//                } else {
+//                    nodes_info_new.put(node, entry.getValue());
+//                }
+//            }
+//        }
+//
+//        // rename and delete unused links
+//        ArrayList<String[]> links_new = new ArrayList();
+//        ArrayList<String[]> excluded_links = new ArrayList();
+//        for (String[] item : links) {
+//            if (item.length == 8) {
+//                String aliase1 = ip_ip.get(item[0]);
+//                String aliase2 = ip_ip.get(item[3]);
+//
+//                if (aliase1 != null && aliase2 != null) {
+//                    if (!item[0].equals(aliase1) || !item[3].equals(aliase2)) {
+//                        logger.Println("Rename link: " + item[0] + " " + item[2] + " <---> " + item[3] + " " + item[5] + " to: " + aliase1 + " " + item[2] + " <---> " + aliase2 + " " + item[5], logger.DEBUG);
+//                    }
+//
+//                    String[] mas = new String[8];
+//                    mas[0] = aliase1;
+//                    mas[1] = item[1];
+//                    mas[2] = item[2];
+//                    mas[3] = aliase2;
+//                    mas[4] = item[4];
+//                    mas[5] = item[5];
+//                    mas[6] = item[6];
+//                    mas[7] = item[7];
+//                    links_new.add(mas);
+//                } else {
+//                    excluded_links.add(item);
+//                }
+//            } else {
+//                loggingArray(item, "Delete link from Nodes_Links_Summary", logger.DEBUG);
+//            }
+//        }
+//
+//        // rename and delete walks_info
+//        Map<String, Map<String, ArrayList>> walks_info_new = new HashMap();
+//        for (Map.Entry<String, Map<String, ArrayList>> entry : walks_info.entrySet()) {
+//            String key = entry.getKey();
+//            Map<String, ArrayList> val = entry.getValue();
+//            Map<String, ArrayList> map_tmp = new HashMap();
+//            for (Map.Entry<String, ArrayList> entry1 : val.entrySet()) {
+//                String node = ip_ip.get(entry1.getKey());
+//                ArrayList list = entry1.getValue();
+//                if (node != null) {
+//                    map_tmp.put(node, list);
+//                }
+//            }
+//            walks_info_new.put(key, map_tmp);
+//        }
+//
+//        // make node_community_version from nodes_info_new
+//        ArrayList<String[]> node_community_version = new ArrayList();
+//        for (Map.Entry<String, String> entry : nodes_info_new.entrySet()) {
+//            String node = entry.getKey();
+//            String[] mas = entry.getValue().split(";", -1)[0].split("\\|");
+//            if (mas.length == 3) {
+//                String[] mas1 = new String[3];
+//                mas1[0] = node;
+//                mas1[1] = mas[1];
+//                mas1[2] = mas[2];
+//                node_community_version.add(mas1);
+//            }
+//        }
+//
+//        // rename arp_mac
+//        ArrayList arp_mac_new = new ArrayList();
+//        for (String[] item : arp_mac) {
+//            String node = ip_ip.get(item[0]);
+//            if (node != null) {
+//                if (!item[0].equals(node)) {
+//                    logger.Println("Rename arp_mac: " + item[0] + " --- " + node, logger.DEBUG);
+//                }
+//                String[] mas = new String[5];
+//                mas[0] = node;
+//                mas[1] = item[1];
+//                mas[2] = item[2];
+//                mas[3] = item[3];
+//                mas[4] = item[4];
+//                arp_mac_new.add(mas);
+//            }
+//        }
+//
+//        result.add(nodes_info_new);
+//        result.add(links_new);
+//        result.add(walks_info_new);
+//        result.add(exclude_list);
+//        result.add(node_community_version);
+//        result.add(arp_mac_new);
+//        result.add(excluded_links);
+//
+//        return result;
+//    }
 
     public int num_Community_node(ArrayList informationFromNodes) {
         int community_nodes = 0;
@@ -6410,7 +6403,7 @@ public class Utils {
         return result;
     }
 
-//    public ArrayList<String[]> InspectLinks(ArrayList<String[]> links, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
+    //    public ArrayList<String[]> InspectLinks(ArrayList<String[]> links, Map<String, Map<String, ArrayList>> walkInformationFromNodes) {
 //        ArrayList<String[]> result = new ArrayList();
 //        
 //        logger.Println("Checking consistent link.", logger.DEBUG);
@@ -6462,7 +6455,7 @@ public class Utils {
         logger.Print("\n", level);
     }
 
-//    public void GetInformationFromMapFile(String mapfile) {
+    //    public void GetInformationFromMapFile(String mapfile) {
 //        ArrayList<String[]> nodes = ReadFromMapFile(mapfile, "^:nodes:$");
 //        synchronized(Neb.links_info) { Neb.links_info.clear(); Neb.links_info = ReadFromMapFile(mapfile, "^:links:$"); }
 //        ArrayList<String[]> hosts = ReadFromMapFile(mapfile, "^:hosts:$");
@@ -6717,7 +6710,7 @@ public class Utils {
             return false;
         }
     }
-    
+
     public boolean writeHashMapToFile(String filename, Map<String, String> map) {
         try {
             try (BufferedWriter outFile = new BufferedWriter(new FileWriter(filename))) {
@@ -6739,13 +6732,14 @@ public class Utils {
 
     public Map normalizeMap2(Map<String, Map> info_map) {
         Gson gson = new Gson();
+
         // remove mac if am link to new node
         for (Map.Entry<String, Map> area : info_map.entrySet()) {
             Map area_info = area.getValue();
             ArrayList<String[]> mac_ip_port = (ArrayList<String[]>) area_info.get("mac_ip_port");
             ArrayList<ArrayList<String>> links = (ArrayList<ArrayList<String>>) area_info.get("links");
             ArrayList<String[]> mac_ip_port_new = new ArrayList();
-            if(mac_ip_port != null) {
+            if (mac_ip_port != null) {
                 for (String[] mip : mac_ip_port) {
                     String node = mip[2];
                     String iface = mip[4];
@@ -6788,104 +6782,8 @@ public class Utils {
             }
             area_info.put("mac_ip_port", mac_ip_port_new);
         }
-/////////////////////////////////////////////////////////////////////////        
-        Map area_node_info_brief = getNodeInfoBrief(info_map);
-        Map<String, Map> area_mainnode_nodelist = new HashMap();
-        for (Map.Entry<String, Map> item : ((Map<String, Map>) area_node_info_brief).entrySet()) {
-            String area_name = item.getKey();
-            Map<String, Map> nodes_links = item.getValue();
-            Map<String, ArrayList<String>> mainnode_nodelist = new HashMap();
-            ArrayList<ArrayList> nodes_info_list = new ArrayList();
-            for (Map.Entry<String, Map> item1 : nodes_links.entrySet()) {
-                String node = item1.getKey();
-                Map val = item1.getValue();
-                ArrayList tmp = new ArrayList();
-                tmp.add(node);
-                tmp.add(val);
-                nodes_info_list.add(tmp);
-            }
-
-            Map<String, String> exclude = new HashMap();
-            for (int i = 0; i < nodes_info_list.size(); i++) {
-                ArrayList<String> duplicate_nodes_list = new ArrayList();
-                String node1 = (String) nodes_info_list.get(i).get(0);
-//                System.out.println(node1);
-                Map info1 = (Map) nodes_info_list.get(i).get(1);
-                if (exclude.get(node1) == null) {
-                    for (int j = i + 1; j < nodes_info_list.size(); j++) {
-                        String node2 = (String) nodes_info_list.get(j).get(0);
-//                        if(node1.equals("SIP-T31G(01:0a:40:84:35)") && node2.equals("SIP-T31G(01:0a:40:84:59)"))
-//                            System.out.println();
-                        Map info2 = (Map) nodes_info_list.get(j).get(1);
-                        if (exclude.get(node2) == null) {
-                            if (isEqualsNodes(info1, info2)) {
-//                                System.out.println(node1+" "+String.valueOf(info1)+" ---"+node2+" "+String.valueOf(info2));
-                                duplicate_nodes_list.add(node2);
-                                exclude.put(node2, node2);
-                            }
-                        }
-                    }
-                }
-                if (!duplicate_nodes_list.isEmpty()) {
-                    duplicate_nodes_list.add(node1);
-                    exclude.put(node1, node1);
-
-                    String main_node = null;
-                    long max = 0;
-                    for (String node : duplicate_nodes_list) {
-                        if (!inside_Networks(node, Neb.not_correct_networks)) {
-                            if (info_map.get(area_name) != null &&
-                                    info_map.get(area_name).get("nodes_information") != null &&
-                                    ((Map) info_map.get(area_name).get("nodes_information")).get(node) != null
-                            ) {
-                                String str = gson.toJson(((Map) info_map.get(area_name).get("nodes_information")).get(node));
-                                long len = str.length();
-                                if (len > max) {
-                                    main_node = node;
-                                    max = len;
-                                }
-                            }
-                        }
-                    }
-
-                    ArrayList<String> duplicate_nodes_list_new = new ArrayList();
-                    if (main_node != null) {
-                        for (String item1 : duplicate_nodes_list) {
-                            if (!item1.equals(main_node)) {
-                                duplicate_nodes_list_new.add(item1);
-                            }
-                        }
-                    }
-                    mainnode_nodelist.put(main_node, duplicate_nodes_list_new);
-                }
-            }
-            if (!mainnode_nodelist.isEmpty()) {
-                area_mainnode_nodelist.put(area_name, mainnode_nodelist);
-            }
-
-        }
-///////////////////////////////////////////////////////////////
-
-        for (Map.Entry<String, Map> item : area_mainnode_nodelist.entrySet()) {
-            String area_name = item.getKey();
-            Map<String, ArrayList<String>> mainnode_nodelist = item.getValue();
-            if (info_map.get(area_name) != null) {
-                Map area_info = info_map.get(area_name);
-
-                ArrayList<String[]> replace_nodes = new ArrayList();
-                for (Map.Entry<String, ArrayList<String>> item1 : mainnode_nodelist.entrySet()) {
-                    String main_node = item1.getKey();
-                    ArrayList<String> node_list = item1.getValue();
-                    for (String node : node_list) {
-                        String[] tmp = new String[2];
-                        tmp[0] = node;
-                        tmp[1] = main_node;
-                        replace_nodes.add(tmp);
-                    }
-                }
-                applyInfo(area_info, replace_nodes);
-            }
-        }
+/////////////////////////////////////////////////////////////////////////
+        info_map = Neb.utils.removeDuplicateNodes(info_map, Neb.area_networks);
 
         return info_map;
     }
@@ -6996,7 +6894,7 @@ public class Utils {
 //        return result;
 //    }
 
-//    private ArrayList<ArrayList<String>> CorrectLinksInclude(ArrayList<ArrayList<String>> links, ArrayList<String> node_list) {
+    //    private ArrayList<ArrayList<String>> CorrectLinksInclude(ArrayList<ArrayList<String>> links, ArrayList<String> node_list) {
 //        ArrayList<ArrayList<String>> result = new ArrayList();
 //        for(ArrayList<String> link : links) {
 //            String node1 = link.get(0);
@@ -7081,23 +6979,176 @@ public class Utils {
         for (Map.Entry<String, Map> area : info_map.entrySet()) {
             Map area_info = area.getValue();
             ArrayList<String[]> mac_ip_port = (ArrayList) area_info.get("mac_ip_port");
-            if(mac_ip_port != null) {
+            if (mac_ip_port != null) {
                 ArrayList<String[]> mac_ip_port_new = new ArrayList();
-                for(String[] mip : mac_ip_port) {
+                for (String[] mip : mac_ip_port) {
                     boolean correct = true;
-                    for(String it : mip) {
-                        if(it == null) {
+                    for (String it : mip) {
+                        if (it == null) {
                             correct = false;
                             break;
                         }
                     }
-                    if(correct) {
+                    if (correct) {
                         mac_ip_port_new.add(mip);
                     }
                 }
                 area_info.put("mac_ip_port", mac_ip_port_new);
             }
         }
+
+        Map area_node_info_brief = getNodeInfoBrief(info_map);
+
+        // if node not links. Adding link from mac_ip_ports
+        for (Map.Entry<String, Map> item : info_map.entrySet()) {
+            String area_name = item.getKey();
+            Map area_info = item.getValue();
+            ArrayList<ArrayList<String>> links = (ArrayList) area_info.get("links");
+            Map<String, Map> nodes_information = (Map) area_info.get("nodes_information");
+            ArrayList<String[]> mac_ip_port = (ArrayList<String[]>) area_info.get("mac_ip_port");
+            Map<String, String[]> mac_node_iface = new HashMap();
+            Map<String, String[]> ip_node_iface = new HashMap();
+            ArrayList<String[]> selected_list = new ArrayList();
+            int pos = 0;
+            if(mac_ip_port != null) {
+                for (String[] mip : mac_ip_port) {
+                    String[] mas = new String[4];
+                    mas[0] = mip[2];
+                    mas[1] = mip[3];
+                    mas[2] = mip[4];
+                    mas[3] = String.valueOf(pos);
+                    mac_node_iface.put(mip[0].replaceAll("[:.-]", "").toLowerCase(), mas);
+                    pos++;
+                }
+                pos = 0;
+                for (String[] mip : mac_ip_port) {
+                    String[] mas = new String[4];
+                    mas[0] = mip[2];
+                    mas[1] = mip[3];
+                    mas[2] = mip[4];
+                    mas[3] = String.valueOf(pos);
+                    ip_node_iface.put(mip[1], mas);
+                    pos++;
+                }
+
+
+                Map<String, String> nodes_with_links = new HashMap();
+                for (ArrayList<String> link : links) {
+                    nodes_with_links.put(link.get(0), link.get(0));
+                    nodes_with_links.put(link.get(3), link.get(3));
+                }
+
+                ArrayList<String> nodes_without_links = new ArrayList();
+                for (Map.Entry<String, Map> item1 : nodes_information.entrySet()) {
+                    String node = item1.getKey();
+                    if (nodes_with_links.get(node) == null) {
+                        nodes_without_links.add(node);
+                    }
+                }
+
+                for (String node : nodes_without_links) {
+                    if (area_node_info_brief.get(area_name) != null &&
+                            ((Map) area_node_info_brief.get(area_name)).get(node) != null) {
+                        String mac_base = (String) ((Map) ((Map) area_node_info_brief.get(area_name)).get(node)).get("mac_base");
+                        ArrayList<String> mac_list = (ArrayList) ((Map) ((Map) area_node_info_brief.get(area_name)).get(node)).get("mac_list");
+                        if (mac_list != null && mac_base != null) {
+                            mac_list.add(mac_base);
+                        }
+                        ArrayList<String> ip_list = (ArrayList) ((Map) ((Map) area_node_info_brief.get(area_name)).get(node)).get("ip_list");
+                        boolean find = false;
+                        if (mac_list != null) {
+                            for (String mac : mac_list) {
+                                mac.replaceAll("[:.-]", "").toLowerCase();
+                                if (mac_node_iface.get(mac) != null) {
+                                    String[] mas = new String[5];
+                                    mas[0] = node;
+                                    mas[1] = mac_node_iface.get(mac)[0];
+                                    mas[2] = mac_node_iface.get(mac)[1];
+                                    mas[3] = mac_node_iface.get(mac)[2];
+                                    mas[4] = mac_node_iface.get(mac)[3];
+                                    selected_list.add(mas);
+                                    find = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!find && ip_list != null) {
+                            for (String ip : ip_list) {
+                                if (ip_node_iface.get(ip) != null) {
+                                    String[] mas = new String[5];
+                                    mas[0] = node;
+                                    mas[1] = ip_node_iface.get(ip)[0];
+                                    mas[2] = ip_node_iface.get(ip)[1];
+                                    mas[3] = ip_node_iface.get(ip)[2];
+                                    mas[4] = ip_node_iface.get(ip)[3];
+                                    selected_list.add(mas);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!selected_list.isEmpty()) {
+                    class MaxToMinPosition implements Comparator {
+                        public int compare(Object obj1, Object obj2) {
+                            Integer pos1 = Integer.parseInt(((String[]) obj1)[4]);
+                            Integer pos2 = Integer.parseInt(((String[]) obj2)[4]);
+                            // Compare the objects
+                            if (pos1 > pos2) return -1;
+                            if (pos1 < pos2) return 1;
+                            return 0;
+                        }
+                    }
+                    Comparator maxToMinPosition = new MaxToMinPosition();
+
+                    Collections.sort(selected_list, maxToMinPosition);
+
+                    for (String[] it : selected_list) {
+                        mac_ip_port.remove(Integer.parseInt(it[4]));
+                        ArrayList<String> link = new ArrayList();
+                        link.add(it[1]);
+                        link.add(it[2]);
+                        link.add(it[3]);
+                        link.add(it[0]);
+                        link.add("");
+                        link.add("unknown");
+                        link.add("mip");
+                        links.add(link);
+                    }
+                }
+            }
+        }
+
+
+        // remove nodes if not links
+        for (Map.Entry<String, Map> item : info_map.entrySet()) {
+            String area_name = item.getKey();
+            System.out.println(area_name);
+            Map area_info = item.getValue();
+            ArrayList<ArrayList<String>> links = (ArrayList) area_info.get("links");
+            Map<String, Map> nodes_information = (Map) area_info.get("nodes_information");
+            Map<String, String> nodes_with_links = new HashMap();
+            if(links != null && nodes_information != null) {
+                for (ArrayList<String> link : links) {
+                    nodes_with_links.put(link.get(0), link.get(0));
+                    nodes_with_links.put(link.get(3), link.get(3));
+                }
+
+                ArrayList<String> remove_nodes_list = new ArrayList();
+                for (Map.Entry<String, Map> item1 : nodes_information.entrySet()) {
+                    String node = item1.getKey();
+                    if (nodes_with_links.get(node) == null) {
+                        remove_nodes_list.add(node);
+                    }
+                }
+                for (String node : remove_nodes_list) {
+                    nodes_information.remove(node);
+                }
+                area_info.put("nodes_information", nodes_information);
+            }
+        }
+
         return info_map;
     }
 
@@ -7111,8 +7162,8 @@ public class Utils {
             iteration = iteration + 1;
         }
         return info_map;
-    }    
-    
+    }
+
     private boolean reorderAndHub(Map<String, Map> info_map) {
         boolean result = false;
 //        JSONParser parser = new JSONParser();
@@ -7146,7 +7197,7 @@ public class Utils {
                             logger.Print(item + ", ", logger.DEBUG);
                         }
                         logger.Println("", logger.DEBUG);
-                    }             
+                    }
                 }
                 if (links_debatables.size() > 1) {
                     links_debatables_list.add(links_debatables);
@@ -8024,6 +8075,10 @@ public class Utils {
                 Map<String, String> ip_map = getIpNode(val);
                 ArrayList<String> ip_list = new ArrayList(ip_map.values());
                 ArrayList<String> mac_list = getMACFromNode(val);
+                ArrayList<String> mac_list_normalize = new ArrayList();
+                for (String item1 : mac_list) {
+                    mac_list_normalize.add(item1.toLowerCase().replace(":", "").replace("-", "").replace(".", ""));
+                }
                 String mac_base = null;
                 String sysname = null;
 //                ArrayList<String> mac_list = new ArrayList();
@@ -8031,9 +8086,63 @@ public class Utils {
                     mac_base = (String) ((Map) val.get("general")).get("base_address");
                     if (mac_base != null) {
                         mac_base = mac_base.toLowerCase().replace(":", "").replace("-", "").replace(".", "");
+                        mac_list_normalize.add(mac_base.toLowerCase().replace(":", "").replace("-", "").replace(".", ""));
                     }
                     sysname = (String) ((Map) val.get("general")).get("sysname");
                 }
+
+                ArrayList<Pattern> p_list = new ArrayList();
+                Pattern p1 = Pattern.compile("(([0-9A-Fa-f]{2}[ .:-]){5}([0-9A-Fa-f]{2}))");
+                Pattern p2 = Pattern.compile("(([0-9A-Fa-f]{4}[ .:-]){2}([0-9A-Fa-f]{4}))");
+                Pattern p3 = Pattern.compile("([0-9A-Fa-f]{6}[ .:-][0-9A-Fa-f]{6})");
+                Pattern p4 = Pattern.compile("\\(([0-9A-Fa-f]{12})\\)");
+                p_list.add(p1);
+                p_list.add(p2);
+                p_list.add(p3);
+                p_list.add(p4);
+                if (sysname != null) {
+                    for (Pattern p : p_list) {
+                        Matcher m = p.matcher(sysname);
+                        if (m.find()) {
+                            String mac = m.group(1);
+                            mac = mac.toLowerCase().replace(":", "").replace("-", "").replace(".", "");
+                            if (!mac_list_normalize.contains(mac)) {
+                                mac_list_normalize.add(mac);
+                            }
+                            break;
+                        }
+                    }
+                }
+                for (Pattern p : p_list) {
+                    Matcher m = p.matcher(node);
+                    if (m.find()) {
+                        String mac = m.group(1);
+                        mac = mac.toLowerCase().replace(":", "").replace("-", "").replace(".", "");
+                        if (!mac_list_normalize.contains(mac)) {
+                            mac_list_normalize.add(mac);
+                        }
+                        break;
+                    }
+                }
+
+                Pattern p = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+)");
+                if (sysname != null) {
+                    Matcher m = p.matcher(sysname);
+                    if (m.find()) {
+                        String ip = m.group(1);
+                        if (!ip_list.contains(ip)) {
+                            ip_list.add(ip);
+                        }
+                    }
+                }
+                Matcher m = p.matcher(node);
+                if (m.find()) {
+                    String ip = m.group(1);
+                    if (!ip_list.contains(ip)) {
+                        ip_list.add(ip);
+                    }
+                }
+
 //                if (val.get("interfaces") != null) {
 //                    Map<String, Map> interfaces = (Map) val.get("interfaces");
 //                    for (Map.Entry<String, Map> item1 : interfaces.entrySet()) {
@@ -8050,21 +8159,34 @@ public class Utils {
                 ArrayList<String[]> node_links = new ArrayList();
                 if (links != null) {
                     for (ArrayList<String> item1 : links) {
-                        String node1 = item1.get(0);
-                        String iface1 = item1.get(2);
-                        String node2 = item1.get(3);
-                        String iface2 = item1.get(5);
-                        if (node1.equals(node)) {
-                            String[] mas = new String[2];
-                            mas[0] = node2;
-                            mas[1] = iface2;
-                            node_links.add(mas);
+                        String node1 = null;
+                        String iface1 = null;
+                        String node2 = null;
+                        String iface2 = null;
+                        if (item1.size() == 5) {
+                            node1 = item1.get(0);
+                            iface1 = item1.get(1);
+                            node2 = item1.get(2);
+                            iface2 = item1.get(3);
+                        } else {
+                            node1 = item1.get(0);
+                            iface1 = item1.get(2);
+                            node2 = item1.get(3);
+                            iface2 = item1.get(5);
                         }
-                        if (node2.equals(node)) {
-                            String[] mas = new String[2];
-                            mas[0] = node1;
-                            mas[1] = iface1;
-                            node_links.add(mas);
+                        if (node1 != null && iface1 != null && node2 != null && iface2 != null) {
+                            if (node1.equals(node)) {
+                                String[] mas = new String[2];
+                                mas[0] = node2;
+                                mas[1] = iface2;
+                                node_links.add(mas);
+                            }
+                            if (node2.equals(node)) {
+                                String[] mas = new String[2];
+                                mas[0] = node1;
+                                mas[1] = iface1;
+                                node_links.add(mas);
+                            }
                         }
                     }
                 }
@@ -8077,8 +8199,8 @@ public class Utils {
                 if (sysname != null) {
                     info.put("sysname", sysname);
                 }
-                if (!mac_list.isEmpty()) {
-                    info.put("mac_list", mac_list);
+                if (!mac_list_normalize.isEmpty()) {
+                    info.put("mac_list", mac_list_normalize);
                 }
                 if (!ip_list.isEmpty()) {
                     info.put("ip_list", ip_list);
@@ -8099,7 +8221,7 @@ public class Utils {
         return area_node_links;
     }
 
-    private boolean isEqualsNodes(Map info1, Map info2) {
+    public boolean isEqualsNodes(Map info1, Map info2) {
         String node1 = (String) info1.get("node");
         String node2 = (String) info2.get("node");
         String mac_base1 = (String) info1.get("mac_base");
@@ -8112,6 +8234,11 @@ public class Utils {
         ArrayList<String> ip_list2 = (ArrayList) info2.get("ip_list");
         ArrayList<String[]> links1 = (ArrayList) info1.get("links");
         ArrayList<String[]> links2 = (ArrayList) info2.get("links");
+
+        if (sysname1 != null && sysname2 != null && !sysname1.equals(sysname2)) {
+//            System.out.println(" --- "+node1+"/"+sysname1+" - "+node2+"/"+sysname2+" non equals.");
+            return false;
+        }
 
         if (mac_list1 != null && mac_list2 != null) {
             for (String mac1 : mac_list1) {
@@ -8129,7 +8256,7 @@ public class Utils {
             return true;
         }
 
-        if (ip_list1 != null && ip_list2 != null) {
+        if (ip_list1 != null && ip_list2 != null && ip_list1.size() > 1 && ip_list2.size() > 1) {
             for (String ip1 : ip_list1) {
                 boolean find = false;
                 for (String ip2 : ip_list2) {
@@ -8145,138 +8272,25 @@ public class Utils {
             return true;
         }
 
-        if(mac_list1 != null || mac_list2 != null) {
-            ArrayList<Pattern> p_list = new ArrayList();
-            Pattern p1 = Pattern.compile("(([0-9A-Fa-f]{2}[ .:-]){5}([0-9A-Fa-f]{2}))");
-            Pattern p2 = Pattern.compile("(([0-9A-Fa-f]{4}[ .:-]){2}([0-9A-Fa-f]{4}))");
-            Pattern p3 = Pattern.compile("([0-9A-Fa-f]{6}[ .:-][0-9A-Fa-f]{6})");
-            Pattern p4 = Pattern.compile("([0-9A-Fa-f]{12})");
-            p_list.add(p1);
-            p_list.add(p2);
-            p_list.add(p3);
-            p_list.add(p4);
-            if (mac_list1 != null) {
-                for (String mac1 : mac_list1) {
-                    mac1 = mac1.replace(":", "").replace(".", "").replace("-", "").replace(" ", "").toLowerCase();
-                    for (Pattern p : p_list) {
-                        if (node2 != null) {
-                            Matcher m1 = p.matcher(node2);
-                            if (m1.find()) {
-                                String mac2 = m1.group(1);
-                                mac2 = mac2.replace(":", "").replace(".", "").replace("-", "").replace(" ", "").toLowerCase();
-                                if (mac1.equals(mac2)) {
-                                    return true;
-                                }
-                            }
-                        }
-                        if (sysname2 != null) {
-                            Matcher m2 = p.matcher(sysname2);
-                            if (m2.find()) {
-                                String mac2 = m2.group(1);
-                                mac2 = mac2.replace(":", "").replace(".", "").replace("-", "").replace(" ", "").toLowerCase();
-                                if (mac1.equals(mac2)) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (mac_list2 != null) {
-                for (String mac2 : mac_list2) {
-                    mac2 = mac2.replace(":", "").replace(".", "").replace("-", "").replace(" ", "").toLowerCase();
-                    for (Pattern p : p_list) {
-                        if (node1 != null) {
-                            Matcher m1 = p.matcher(node1);
-                            if (m1.find()) {
-                                String mac1 = m1.group(1);
-                                mac1 = mac1.replace(":", "").replace(".", "").replace("-", "").replace(" ", "").toLowerCase();
-                                if (mac1.equals(mac2)) {
-                                    return true;
-                                }
-                            }
-                        }
-                        if (sysname1 != null) {
-                            Matcher m2 = p.matcher(sysname1);
-                            if (m2.find()) {
-                                String mac1 = m2.group(1);
-                                mac1 = mac1.replace(":", "").replace(".", "").replace("-", "").replace(" ", "").toLowerCase();
-                                if (mac1.equals(mac2)) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if(ip_list1 != null || ip_list2 != null) {
-            Pattern p = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+)");
-            if (ip_list1 != null) {
-                for (String ip1 : ip_list1) {
-                    if (node2 != null) {
-                        Matcher m1 = p.matcher(node2);
-                        if (m1.find()) {
-                            String ip2 = m1.group(1);
-                            if (ip1.equals(ip2)) {
-                                return true;
-                            }
-                        }
-                    }
-                    if (sysname2 != null) {
-                        Matcher m2 = p.matcher(sysname2);
-                        if (m2.find()) {
-                            String ip2 = m2.group(1);
-                            if (ip1.equals(ip2)) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            if (ip_list2 != null) {
-                for (String ip2 : ip_list2) {
-                    if (node1 != null) {
-                        Matcher m1 = p.matcher(node1);
-                        if (m1.find()) {
-                            String ip1 = m1.group(1);
-                            if (ip1.equals(ip2)) {
-                                return true;
-                            }
-                        }
-                    }
-                    if (sysname1 != null) {
-                        Matcher m2 = p.matcher(sysname1);
-                        if (m2.find()) {
-                            String ip1 = m2.group(1);
-                            if (ip1.equals(ip2)) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        boolean equal = false;
-        if (mac_base1 != null && mac_base2 != null) {
+        if (mac_base1 != null && mac_base2 != null &&
+                !mac_base1.startsWith("00000000") && !mac_base1.startsWith("01000000") &&
+                !mac_base2.startsWith("00000000") && !mac_base2.startsWith("01000000")
+        ) {
             if (mac_base1.equals(mac_base2)) {
-                equal = true;
+                return true;
             }
         }
+        boolean equal = false;
         if (sysname1 != null && !sysname1.equals("(none)") && sysname2 != null && !sysname2.equals("(none)")) {
             if (sysname1.equals(sysname2)) {
                 equal = true;
             }
         }
         if (equal) {
-            if (links1 == null || links2 == null || links1.isEmpty() || links2.isEmpty()) {
-                return true;
-            } else {
+            if (links1 != null && links2 != null) {
                 for (String[] item1 : links1) {
                     for (String[] item2 : links2) {
-                        if (item1[0].equals(item2[0]) && item1[1].equals(item2[1])) {
+                        if (item1[0].equals(item2[0]) && equalsIfaceName(item1[1], item2[1])) {
                             return true;
                         }
                     }
@@ -8286,12 +8300,12 @@ public class Utils {
 
         return false;
     }
-    
+
     public String nameToIp(String name, Map<String, String> mac_ip) {
-        if(name.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
+        if (name.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
             return name;
         }
-        
+
 //        Pattern p0 = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+)");
 //        Matcher m0 = p0.matcher(name);
 //        if (m0.find()) {
@@ -8299,43 +8313,43 @@ public class Utils {
 //            if(ip != null)
 //                return ip;
 //        }        
-        
+
         String name_new = name.replaceAll("[:.-]", "").toLowerCase();
         Pattern p = Pattern.compile("^.*([0-9a-f]{12}).*$");
         Matcher m = p.matcher(name_new);
         if (m.find()) {
             String mac = m.group(1);
-            if(mac_ip.get(mac) != null)
+            if (mac_ip.get(mac) != null)
                 return mac_ip.get(mac);
             else
                 return name;
         }
         return name;
     }
-    
+
     public Map normalizeLinks(Map<String, Map> info_map) {
         Map<String, String> mac_ip = get_Mac_Ip(info_map);
-        
+
         for (Map.Entry<String, Map> entry : info_map.entrySet()) {
 //            String area = entry.getKey();
             Map val = entry.getValue();
             ArrayList<ArrayList<String>> links = (ArrayList<ArrayList<String>>) val.get("links");
-            if(links != null) {
+            if (links != null) {
                 ArrayList<ArrayList<String>> links_new = new ArrayList();
-                for(ArrayList<String> link : links) {
+                for (ArrayList<String> link : links) {
                     String node = link.get(3);
                     if (!node.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
                         String res = utils.nameToIp(node, mac_ip);
                         if (res.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
                             link.set(3, res);
                             links_new.add(link);
-                            logger.Println("normalizeLinks add link: "+link.get(0)+", "+link.get(1)+" <---> "+link.get(2)+", "+link.get(3)+" - "+link.get(4), logger.DEBUG);
+                            logger.Println("normalizeLinks add link: " + link.get(0) + ", " + link.get(1) + " <---> " + link.get(2) + ", " + link.get(3) + " - " + link.get(4), logger.DEBUG);
                         } else {
-                            logger.Println("normalizeLinks remove link: "+link.get(0)+", "+link.get(1)+" <---> "+link.get(2)+", "+link.get(3)+" - "+link.get(4), logger.DEBUG);
+                            logger.Println("normalizeLinks remove link: " + link.get(0) + ", " + link.get(1) + " <---> " + link.get(2) + ", " + link.get(3) + " - " + link.get(4), logger.DEBUG);
                         }
                     } else {
                         links_new.add(link);
-                        logger.Println("normalizeLinks add link: "+link.get(0)+", "+link.get(1)+" <---> "+link.get(2)+", "+link.get(3)+" - "+link.get(4), logger.DEBUG);
+                        logger.Println("normalizeLinks add link: " + link.get(0) + ", " + link.get(1) + " <---> " + link.get(2) + ", " + link.get(3) + " - " + link.get(4), logger.DEBUG);
                     }
                 }
                 val.put("links", links_new);
@@ -8349,7 +8363,8 @@ public class Utils {
             Map<String, String> mac_ip_from_nodes = get_Mac_Ip(info_map);
             Map<String, Map<String, String>> area_ip_mac_from_nodes = get_Area_Ip_Mac(info_map);
             Map<String, Map<String, Map<String, String>>> area_node_ip_mac = get_Area_Node_Ip_Mac(info_map);
-            
+            Map<String, Map> area_Node_NodePriority = getArea_Node_NodePriority(info_map, Neb.area_networks);
+
             // area_arp_mac_table to area_mac_ip and area_ip_mac
             Map<String, Map<String, String>> area_mac_ip_from_arp_mac_table = new HashMap();
             Map<String, Map<String, String>> area_ip_mac_from_arp_mac_table = new HashMap();
@@ -8399,6 +8414,7 @@ public class Utils {
                     // correct node information
                     for (Map.Entry<String, Map> node_it : nodes_info.entrySet()) {
                         String node = node_it.getKey();
+//                        System.out.println("node1 - "+node);
                         Map<String, Map> node_info = node_it.getValue();
                         if (node_info.get("general") != null && node_info.get("general").get("base_address") != null) {
                             String base_address = (String) node_info.get("general").get("base_address");
@@ -8429,10 +8445,15 @@ public class Utils {
                     Map<String, ArrayList<String>> sysname_node = new HashMap();
                     for (Map.Entry<String, Map> node_it : nodes_info.entrySet()) {
                         String node = node_it.getKey();
+//                        System.out.println("node2 - "+node);
                         Map<String, Map> node_info = node_it.getValue();
                         if (node_info.get("general") != null && node_info.get("general").get("sysname") != null) {
                             String sysname = (String) (node_info.get("general").get("sysname"));
-                            sysname = sysname.split("\\.")[0];
+                            Pattern p = Pattern.compile(".*([0-9A-Fa-f]{4}\\.[0-9A-Fa-f]{4}\\.[0-9A-Fa-f]{4}).*");
+                            Matcher m = p.matcher(sysname);
+                            if (!m.find()) {
+                                sysname = sysname.split("\\.")[0];
+                            }
                             if (sysname_node.get(sysname) == null) {
                                 ArrayList<String> tmp_list = new ArrayList();
                                 tmp_list.add(node);
@@ -8442,7 +8463,7 @@ public class Utils {
                             }
                         }
                     }
-                    
+
 //                    ArrayList<String[]> nodes_to_nodes_for_mac_ip_port = new ArrayList();
                     for (Map.Entry<String, ArrayList<String>> it : sysname_node.entrySet()) {
                         ArrayList<String> val = it.getValue();
@@ -8465,7 +8486,7 @@ public class Utils {
 //                                tmp1[0] = val.get(0);
 //                                tmp1[1] = val.get(1);
 //                                nodes_to_nodes_for_mac_ip_port.add(tmp1);
-                            } 
+                            }
 //                            else if (!val.get(0).matches("\\d+\\.\\d+\\.\\d+\\.\\d+") && !val.get(1).matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
 //                                String[] tmp = new String[2];
 //                                tmp[0] = val.get(0);
@@ -8480,12 +8501,13 @@ public class Utils {
 
                     ////////////////////////////////////
                     applyInfo(area_info, replace_nodes);
-                    
+
                     nodes_info = (Map<String, Map>) area_info.get("nodes_information");
                     replace_nodes.clear();
 //                    nodes_to_nodes_for_mac_ip_port.clear();
                     for (Map.Entry<String, Map> node_it : nodes_info.entrySet()) {
                         String node = node_it.getKey();
+//                        System.out.println("node3 - "+node);
                         // resolve nodes format CS2960...(12:34:56:78:0a:bc) and remove duplicate nodes
                         if (!node.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
                             String ip = null;
@@ -8493,11 +8515,11 @@ public class Utils {
                             if (res.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
                                 ip = res;
                             } else {
-                                if(area_mac_ip_from_arp_mac_table.get(area_name) != null) {
+                                if (area_mac_ip_from_arp_mac_table.get(area_name) != null) {
                                     res = nameToIp(node, area_mac_ip_from_arp_mac_table.get(area_name));
                                     if (res.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
                                         ip = res;
-                                    }                                    
+                                    }
                                 }
                             }
 //                            if (ip == null) {
@@ -8536,20 +8558,21 @@ public class Utils {
 //                                tmp1[0] = node;
 //                                tmp1[1] = ip;
 //                                nodes_to_nodes_for_mac_ip_port.add(tmp1);
-                            }                            
+                            }
                         }
 
                     }
                     applyInfo(area_info, replace_nodes);
-                    
+
                     nodes_info = (Map<String, Map>) area_info.get("nodes_information");
                     replace_nodes.clear();
 //                    nodes_to_nodes_for_mac_ip_port.clear();
                     // find in node and sysname name mac address.
                     for (Map.Entry<String, Map> node_it : nodes_info.entrySet()) {
                         String node = node_it.getKey();
+//                        System.out.println("node4 - "+node);
                         Map<String, Map> node_info = node_it.getValue();
-                        
+
                         if (!node.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
                             String res = nameToIp(node, mac_ip_from_nodes);
                             if (res.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
@@ -8574,9 +8597,9 @@ public class Utils {
 //                                        tmp1[0] = node;
 //                                        tmp1[1] = res;
 //                                        nodes_to_nodes_for_mac_ip_port.add(tmp1);
-                                    }                                
-                                }                            
-                            }                     
+                                    }
+                                }
+                            }
                         }
                     }
                     applyInfo(area_info, replace_nodes);
@@ -8585,79 +8608,83 @@ public class Utils {
                     Map<String, ArrayList<String>> key_node = new HashMap();
                     for (Map.Entry<String, Map> node_it : nodes_info.entrySet()) {
                         String node = node_it.getKey();
-//                        System.out.println("node - "+node);
+//                        System.out.println("node5 - "+node);
                         Map<String, Map> node_info = node_it.getValue();
 
                         Pattern p = Pattern.compile("(.*)\\((([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2}))\\)");
                         Matcher m = p.matcher(node);
                         String[] mas = new String[2];
                         if (m.find()) {
-                            if(!(m.group(1).equals("none") || m.group(1).equals("(none)") ||
+                            if (!(m.group(1).equals("none") || m.group(1).equals("(none)") ||
                                     m.group(1).equals("null") ||
                                     m.group(1).equals("not advertised")
-                                ) &&
-                                    !(m.group(2).startsWith("00:00:00:00") || 
-                                    m.group(2).startsWith("01:00:00:00")
-                                )
+                            ) &&
+                                    !(m.group(2).startsWith("00:00:00:00") ||
+                                            m.group(2).startsWith("01:00:00:00")
+                                    )
                             ) {
                                 mas[0] = m.group(1);
                                 mas[1] = m.group(2);
                             }
                         }
-                        
-                        for(String item : mas) {
-                            if(item != null && !item.isEmpty()) {
+
+                        for (String item : mas) {
+                            if (item != null && !item.isEmpty()) {
 //                                System.out.println("\t"+item+" - "+node);
-                                if(key_node.get(item) == null) {
+                                if (key_node.get(item) == null) {
                                     ArrayList tmp = new ArrayList();
                                     tmp.add(node);
                                     key_node.put(item, tmp);
                                 } else {
-                                    if(!key_node.get(item).contains(node)) {
+                                    if (!key_node.get(item).contains(node)) {
                                         key_node.get(item).add(node);
                                     }
                                 }
-                            }                            
-                            
+                            }
+
                         }
                     }
-                    
+
                     Map<String, ArrayList<String>> key_node_new = new HashMap();
                     for (Map.Entry<String, ArrayList<String>> entry : key_node.entrySet()) {
                         String key = entry.getKey();
                         ArrayList<String> nodes_list = entry.getValue();
-                        if(nodes_list.size() > 1) {
+                        if (nodes_list.size() > 1) {
                             key_node_new.put(key, nodes_list);
                         }
                     }
                     key_node = key_node_new;
 
                     ArrayList<String[]> nodes_duble_list = new ArrayList();
+//                    Map<String, String> nodes_exclude = new HashMap();
                     for (Map.Entry<String, ArrayList<String>> entry : key_node.entrySet()) {
                         String key = entry.getKey();
                         ArrayList<String> nodes_list = entry.getValue();
 //                        String listString = nodes_list.stream().map(Object::toString).collect(Collectors.joining(", "));
 //                        System.out.println(key+" - "+listString);
-                        if(nodes_list.size() > 1) {
+                        if (nodes_list.size() > 1) {
                             int node_ip = 0;
-                            for(String it : nodes_list) {
-                                if(it.matches("\\d+\\.\\d+\\.\\d+\\.\\d+"))
+                            for (String it : nodes_list) {
+                                if (it.matches("\\d+\\.\\d+\\.\\d+\\.\\d+"))
                                     node_ip++;
                             }
-                            if(node_ip <= 1) {
+                            if (node_ip <= 1) {
 //                                System.out.print(key+": ");
 //                                for(String it : nodes_list)
 //                                    System.out.print(it+", ");
 //                                System.out.println();
-                                
-                                if(key.length() > 4 && !key.contains(" ")) {
-                                    String nodes_max_info = choiceMaxInformationNode(nodes_list, nodes_info);
-                                    nodes_list.remove(nodes_max_info);
+
+                                if (key.length() > 4 && !key.contains(" ")) {
+                                    String node_priority = nodes_list.get(0);
+                                    if (Neb.area_networks.get(area_name) != null && !Neb.area_networks.get(area_name).isEmpty()) {
+                                        node_priority = getPriorityNode(nodes_list, nodes_info, area_Node_NodePriority.get(area_name));
+                                        nodes_list.remove(node_priority);
+                                    }
                                     ArrayList<String[]> tmp_list = new ArrayList();
-                                    for(String node : nodes_list) {
+                                    for (String node : nodes_list) {
                                         String[] tmp_mas = new String[2];
                                         tmp_mas[0] = node;
-                                        tmp_mas[1] = nodes_max_info;
+                                        tmp_mas[1] = node_priority;
                                         tmp_list.add(tmp_mas);
                                     }
                                     nodes_duble_list.addAll(tmp_list);
@@ -8668,10 +8695,10 @@ public class Utils {
 //                                    /////////////////                                    
                                 } else {
                                     Map<String, ArrayList<String>> mac_node = new HashMap();
-                                    for(String node : nodes_list) {
+                                    for (String node : nodes_list) {
                                         String mac = extractMACFromName1(node);
-                                        if(!mac.isEmpty()) {
-                                            if(mac_node.get(mac) == null) {
+                                        if (!mac.isEmpty()) {
+                                            if (mac_node.get(mac) == null) {
                                                 ArrayList<String> tmp_list = new ArrayList();
                                                 tmp_list.add(node);
                                                 mac_node.put(mac, tmp_list);
@@ -8679,19 +8706,22 @@ public class Utils {
                                                 mac_node.get(mac).add(node);
                                             }
                                         }
-                                       
+
                                     }
                                     for (Map.Entry<String, ArrayList<String>> entry1 : mac_node.entrySet()) {
                                         ArrayList<String> val_list = entry1.getValue();
-                                        String nodes_max_info = choiceMaxInformationNode(val_list, nodes_info);
-                                        val_list.remove(nodes_max_info);
+                                        String node_priority = nodes_list.get(0);
+                                        if (Neb.area_networks.get(area_name) != null && !Neb.area_networks.get(area_name).isEmpty()) {
+                                            node_priority = getPriorityNode(val_list, nodes_info, area_Node_NodePriority.get(area_name));
+                                            val_list.remove(node_priority);
+                                        }
                                         ArrayList<String[]> tmp_list = new ArrayList();
-                                        for(String node : val_list) {
+                                        for (String node : val_list) {
                                             String[] tmp_mas = new String[2];
                                             tmp_mas[0] = node;
-                                            tmp_mas[1] = nodes_max_info;
+                                            tmp_mas[1] = node_priority;
                                             tmp_list.add(tmp_mas);
-                                        }                                        
+                                        }
                                         nodes_duble_list.addAll(tmp_list);
 //                                        /////////////
 //                                        for(String node : val_list) {
@@ -8707,28 +8737,43 @@ public class Utils {
                     // remove duplicate nodes if node equivalent ip address other node
                     for (Map.Entry<String, Map> node_it : nodes_info.entrySet()) {
                         String node = node_it.getKey();
-                        if(area_node_ip_mac.get(area_name) != null) {
+//                        if(node.equals("10.96.115.254") || node.equals("10.97.7.254")) {
+//                            System.out.println("node - "+node);
+//                        }
+//                        System.out.println("node6 - "+node);
+                        if (area_node_ip_mac.get(area_name) != null) {
                             for (Map.Entry<String, Map<String, String>> entry1 : area_node_ip_mac.get(area_name).entrySet()) {
                                 String node1 = entry1.getKey();
                                 Map<String, String> val = entry1.getValue();
-                                if(val.get(node) != null && !node.equals(node1)) {
+                                if (val.get(node) != null && !node.equals(node1)) {
                                     String[] tmp_mas = new String[2];
                                     tmp_mas[0] = node;
                                     tmp_mas[1] = node1;
-                                    nodes_duble_list.add(tmp_mas);
+                                    String node_priority = node;
+                                    if (Neb.area_networks.get(area_name) != null && !Neb.area_networks.get(area_name).isEmpty()) {
+                                        ArrayList<String> tmp_list = new ArrayList();
+                                        tmp_list.add(node);
+                                        tmp_list.add(node1);
+                                        node_priority = getPriorityNode(tmp_list, nodes_info, area_Node_NodePriority.get(area_name));
+                                    }
+                                    if (node_priority.equals(node1)) {
+                                        nodes_duble_list.add(tmp_mas);
+                                    }
 //                                    System.out.println("Node "+node+" is duplicate with "+node1);
                                 }
 
                             }
                         }
                     }
-                    
-                    if(!nodes_duble_list.isEmpty())
-                        applyInfo_RemoveDubleNodes(area_info, nodes_duble_list);
+
+                    if (!nodes_duble_list.isEmpty()) {
+//                        applyInfo_RemoveDubleNodes(area_info, nodes_duble_list);
+                        applyInfo(area_info, nodes_duble_list);
+                    }
                 }
 
             }
-            
+
             // check nodes without links and adding link from mac_ip_port
             for (Map.Entry<String, Map> area : info_map.entrySet()) {
                 Map area_info = area.getValue();
@@ -8856,7 +8901,7 @@ public class Utils {
                     area_info.put("mac_ip_port", mac_ip_port);
                 }
             }
-            
+
             // checking and replace short interface to full name interface
             for (Map.Entry<String, Map> area : info_map.entrySet()) {
                 String area_name = area.getKey();
@@ -8877,7 +8922,7 @@ public class Utils {
                                     if (equalsIfaceName(iface1, interfacename)) {
                                         mas.set(2, interfacename);
                                         logger.Println("Replace: " + node1 + " " + iface1 + " to: " + node1 + " " + mas.get(2), logger.DEBUG);
-            //                            System.out.println("Replace: "+node1+" "+iface1+" to: "+node1+" "+mas.get(1));
+                                        //                            System.out.println("Replace: "+node1+" "+iface1+" to: "+node1+" "+mas.get(1));
                                         find = true;
                                         break;
                                     }
@@ -8887,7 +8932,7 @@ public class Utils {
                             }
                             if (!find) {
                                 logger.Println(node1 + " " + iface1 + " not finded interfece from node.", logger.DEBUG);
-            //                   System.out.println(node1+" "+mas.get(1)+" not finded interfece from node.");
+                                //                   System.out.println(node1+" "+mas.get(1)+" not finded interfece from node.");
                             }
                         }
                         String node2 = mas.get(3);
@@ -8901,7 +8946,7 @@ public class Utils {
                                     if (equalsIfaceName(iface2, interfacename)) {
                                         mas.set(5, interfacename);
                                         logger.Println("Replace: " + node2 + " " + iface2 + " to: " + node2 + " " + mas.get(5), logger.DEBUG);
-            //                            System.out.println("Replace: "+node1+" "+iface1+" to: "+node1+" "+mas.get(1));
+                                        //                            System.out.println("Replace: "+node1+" "+iface1+" to: "+node1+" "+mas.get(1));
                                         find = true;
                                         break;
                                     }
@@ -8911,13 +8956,13 @@ public class Utils {
                             }
                             if (!find) {
                                 logger.Println(node2 + " " + iface2 + " not finded interfece from node.", logger.DEBUG);
-            //                   System.out.println(node1+" "+mas.get(1)+" not finded interfece from node.");
+                                //                   System.out.println(node1+" "+mas.get(1)+" not finded interfece from node.");
                             }
-                        }                        
+                        }
                     }
                 }
             }
-            
+
             // adding ifaceid to links
             for (Map.Entry<String, Map> area : info_map.entrySet()) {
                 String area_name = area.getKey();
@@ -8929,7 +8974,7 @@ public class Utils {
                     if (links != null) {
                         for (ArrayList<String> link : links) {
                             ArrayList<String> link_tmp = new ArrayList();
-                            if(link.get(2).isEmpty()) {
+                            if (link.get(2).isEmpty()) {
                                 Map<String, String> ifaceid_ifacename_list = node_ifacename_ifaceid.get(link.get(0));
                                 if (ifaceid_ifacename_list != null && !ifaceid_ifacename_list.isEmpty()) {
                                     String[] if_name_iface1 = findIfaceFromNode(link.get(2), ifaceid_ifacename_list);
@@ -8941,7 +8986,7 @@ public class Utils {
                                         link_tmp.add(link.get(0));
                                         link_tmp.add("");
                                         link_tmp.add(link.get(2));
-        //                                System.out.println("ID iface not found: "+link.get(0)+", "+link.get(1));                                
+                                        //                                System.out.println("ID iface not found: "+link.get(0)+", "+link.get(1));
                                     }
                                 } else {
                                     link_tmp.add(link.get(0));
@@ -8951,10 +8996,10 @@ public class Utils {
                             } else {
                                 link_tmp.add(link.get(0));
                                 link_tmp.add(link.get(1));
-                                link_tmp.add(link.get(2));                                
+                                link_tmp.add(link.get(2));
                             }
 
-                            if(link.get(4).isEmpty()) {
+                            if (link.get(4).isEmpty()) {
                                 Map<String, String> ifaceid_ifacename_list = node_ifacename_ifaceid.get(link.get(3));
                                 if (ifaceid_ifacename_list != null && !ifaceid_ifacename_list.isEmpty()) {
                                     String[] if_name_iface2 = findIfaceFromNode(link.get(5), ifaceid_ifacename_list);
@@ -8966,7 +9011,7 @@ public class Utils {
                                         link_tmp.add(link.get(3));
                                         link_tmp.add("");
                                         link_tmp.add(link.get(5));
-        //                                System.out.println("ID iface not found: "+link.get(2)+", "+link.get(3));
+                                        //                                System.out.println("ID iface not found: "+link.get(2)+", "+link.get(3));
                                     }
                                 } else {
                                     link_tmp.add(link.get(3));
@@ -8976,27 +9021,27 @@ public class Utils {
                             } else {
                                 link_tmp.add(link.get(3));
                                 link_tmp.add(link.get(4));
-                                link_tmp.add(link.get(5));                                
-                            }                            
+                                link_tmp.add(link.get(5));
+                            }
                             link_tmp.add(link.get(6));
                             links_new.add(link_tmp);
                         }
                     }
                     val.put("links", links_new);
                 }
-            } 
-            
+            }
+
             // find false DP links(is same ports delete CDP links)
             for (Map.Entry<String, Map> area : info_map.entrySet()) {
 //                String area_name = area.getKey();
 //                System.out.println(area_name);
                 Map<String, Object> val = area.getValue();
-                if(val != null) {
+                if (val != null) {
                     ArrayList<ArrayList<String>> links = (ArrayList<ArrayList<String>>) val.get("links");
                     if (links != null) {
-                        ArrayList<ArrayList<ArrayList<String>>> links_switces = new ArrayList(); 
+                        ArrayList<ArrayList<ArrayList<String>>> links_switces = new ArrayList();
                         for (ArrayList<String> link : links) {
-                            if(!links_switces.isEmpty()) {
+                            if (!links_switces.isEmpty()) {
                                 ArrayList<ArrayList<String>> link_sw_list = new ArrayList();
                                 boolean found = false;
                                 for (ArrayList<ArrayList<String>> linksSwitce : links_switces) {
@@ -9011,12 +9056,12 @@ public class Utils {
                                         break;
                                     }
                                 }
-                                if(found) {
+                                if (found) {
                                     link_sw_list.add(link);
                                 } else {
                                     ArrayList<ArrayList<String>> tmp = new ArrayList();
                                     tmp.add(link);
-                                    links_switces.add(tmp);                                                          
+                                    links_switces.add(tmp);
                                 }
 
                             } else {
@@ -9029,50 +9074,50 @@ public class Utils {
                         JSONParser parser = new JSONParser();
                         ArrayList<ArrayList<String>> links_delete = new ArrayList();
                         for (ArrayList<ArrayList<String>> item : links_switces) {
-                            if(item.size() > 1) {
+                            if (item.size() > 1) {
                                 ArrayList<ArrayList<String>> links_tmp = new ArrayList();
-                                for(ArrayList<String> link : item) {
+                                for (ArrayList<String> link : item) {
                                     try {
                                         JSONObject jsonObject = (JSONObject) parser.parse(link.get(6));
                                         Map json = toMap(jsonObject);
                                         if (json.get("type") != null) {
                                             String type = (String) json.get("type");
-                                            if(type.equals("cdp")) {
+                                            if (type.equals("cdp")) {
                                                 links_tmp.add(link);
                                             }
                                         }
                                     } catch (ParseException ex) {
                                     }
                                 }
-                                if(links_tmp.size() != item.size()) {
+                                if (links_tmp.size() != item.size()) {
                                     links_delete.addAll(links_tmp);
                                 } else {
-                                    for(int i = 1; i < links_tmp.size(); i++) {
+                                    for (int i = 1; i < links_tmp.size(); i++) {
                                         links_delete.add(links_tmp.get(i));
                                     }
                                 }
                             }
                         }
                         ArrayList<ArrayList<String>> links_new = new ArrayList();
-                        if(!links_delete.isEmpty()) {
-                            for(ArrayList<String> link : links) {
+                        if (!links_delete.isEmpty()) {
+                            for (ArrayList<String> link : links) {
                                 boolean found = false;
                                 for (ArrayList<String> item_del : links_delete) {
-                                    if( link.get(0).equals(item_del.get(0)) && 
-                                        link.get(1).equals(item_del.get(1)) &&
-                                        link.get(2).equals(item_del.get(2)) &&
-                                        link.get(3).equals(item_del.get(3)) && 
-                                        link.get(4).equals(item_del.get(4)) &&
-                                        link.get(5).equals(item_del.get(5))
-                                        ) {
+                                    if (link.get(0).equals(item_del.get(0)) &&
+                                            link.get(1).equals(item_del.get(1)) &&
+                                            link.get(2).equals(item_del.get(2)) &&
+                                            link.get(3).equals(item_del.get(3)) &&
+                                            link.get(4).equals(item_del.get(4)) &&
+                                            link.get(5).equals(item_del.get(5))
+                                    ) {
                                         found = true;
                                         break;
-                                    }                                
+                                    }
                                 }
-                                if(!found) {
+                                if (!found) {
                                     links_new.add(link);
                                 } else {
-                                    logger.Println("Delete switch link cdp: "+link.get(0)+" "+link.get(2)+" <---> "+link.get(3)+" "+link.get(5), logger.DEBUG);
+                                    logger.Println("Delete switch link cdp: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), logger.DEBUG);
                                 }
                             }
                             val.put("links", links_new);
@@ -9080,10 +9125,10 @@ public class Utils {
                     }
                 }
             }
-            
-            
+
+
         } catch (Exception ex) {
-            System.out.println("ex="+ex);
+            System.out.println("ex=" + ex);
             ex.printStackTrace(System.out);
         }
         return info_map;
@@ -9303,10 +9348,10 @@ public class Utils {
     }
 
     private void mapToIndexSubProcessor(Map<String, Object> map, String key, Object value, IndexWriter w, String area, String node) {
-        if(value != null) {
+        if (value != null) {
             switch (value) {
                 case String string -> {
-    //            System.out.println(value);
+                    //            System.out.println(value);
                     String[] mas = string.split("\n");
                     for (String item : mas) {
                         if (item.length() > 32765) {
@@ -9335,7 +9380,7 @@ public class Utils {
                         mapToIndexSubProcessor(map, key, object, w, area, node);
                     }
                 }
-                case @SuppressWarnings("unused") Map map1 -> {
+                case @SuppressWarnings("unused")Map map1 -> {
                     try {
                         //noinspection unchecked
                         Map<String, Object> subMap = (Map<String, Object>) value;
@@ -9401,14 +9446,15 @@ public class Utils {
                 String key = entry.getKey();
                 ArrayList<ArrayList<String>> val = entry.getValue();
                 ArrayList<ArrayList<String>> val_new = new ArrayList();
-                for(ArrayList<String> it : val) {
-                    if(!it.get(1).endsWith(mapfile)) {
+                for (ArrayList<String> it : val) {
+                    if (!it.get(1).endsWith(mapfile)) {
                         val_new.add(it);
                     }
                 }
                 index.put(key, val_new);
             }
-        } catch (java.util.ConcurrentModificationException ex) { }
+        } catch (java.util.ConcurrentModificationException ex) {
+        }
     }
 
     public void indexing(Map<String, ArrayList<ArrayList<String>>> index) {
@@ -9497,7 +9543,7 @@ public class Utils {
             ArrayList<ArrayList<String>> mac_ip_port = (ArrayList<ArrayList<String>>) area_info.get("mac_ip_port");
             if (mac_ip_port != null) {
                 for (ArrayList<String> mip : mac_ip_port) {
-                    if(mip.size() > 5) {
+                    if (mip.size() > 5) {
                         String mac = normalizeMAC(mip.get(0));
                         String ip = mip.get(1);
                         String node1 = mip.get(2);
@@ -9571,7 +9617,7 @@ public class Utils {
         }
     }
 
-//    public boolean DeletedNode(String node, boolean force) {
+    //    public boolean DeletedNode(String node, boolean force) {
 //        boolean is_changed=false;
 //        if(Neb.nodes_info.get(node) != null) {
 //            String[] link = new String[6];
@@ -9828,13 +9874,13 @@ public class Utils {
                     logger.Println("Remove not uniqal node: " + node_exist, logger.DEBUG);
                     result.put(node, val);
                     logger.Println("Adding uniqal node: " + node, logger.DEBUG);
-                } else if(node_priority.get(node) != null && node_priority.get(node_exist) == null) {
+                } else if (node_priority.get(node) != null && node_priority.get(node_exist) == null) {
                     String str = gson.toJson(val);
                     String str_exist = "";
                     if (val_exist != null) {
                         str_exist = gson.toJson(val_exist);
                     }
-                    if(str.length() > str_exist.length()) {
+                    if (str.length() > str_exist.length()) {
                         result.remove(node_exist);
                         logger.Println("Remove not uniqal node: " + node_exist, logger.DEBUG);
                         result.put(node, val);
@@ -9889,7 +9935,7 @@ public class Utils {
         return ip_node;
     }
 
-//    private Map<String, String> GetIpFromNone(Map<String, Map> nodes_information) {
+    //    private Map<String, String> GetIpFromNone(Map<String, Map> nodes_information) {
 //        Map<String, String> result = new HashMap();
 //
 //        for(Map.Entry<String, Map> entry : ((Map<String, Map>)nodes_information).entrySet()) {
@@ -9920,15 +9966,15 @@ public class Utils {
 //        
 //        return result;
 //    }
-    public ArrayList<ArrayList<ArrayList<String>>> normalizationLinks(Map<String, Map> nodes_information, 
-            ArrayList<String> networks, ArrayList<String> not_correct_networks) {
+    public ArrayList<ArrayList<ArrayList<String>>> normalizationLinks(Map<String, Map> nodes_information,
+                                                                      ArrayList<String> networks, ArrayList<String> not_correct_networks) {
         ArrayList<ArrayList<ArrayList<String>>> result = new ArrayList();
 
         // Get mac => [node, iface]
         Map<String, String[]> mac_node_port = getMacNode_Iface(nodes_information);
 //        mapToFile(mac_node_port, "mac_node_port", Neb.DELAY_WRITE_FILE);
-        
-        
+
+
         // Get Ip => node
         Map<String, String> ip_node = getIpFromNodes(nodes_information, networks, not_correct_networks);
 
@@ -10176,7 +10222,7 @@ public class Utils {
             new_list.add(mas1);
         }
         links = new_list;
-        
+
 //        // replace link node to format ip address and find in nodes list, if no to remove link
 //        links_new = new ArrayList();
 //        for(ArrayList<String> link : links) {
@@ -10243,49 +10289,49 @@ public class Utils {
                     node_iface[1] = iface_name;
 //                    if(mac.equals("0090e8869839"))
 //                        System.out.println("111111");
-                    if(mac.matches("[0-9a-f]{12}") && !mac.equals("000000000000")) {
+                    if (mac.matches("[0-9a-f]{12}") && !mac.equals("000000000000")) {
                         mac_node_iface.put(mac, node_iface);
                     }
                 }
             }
         }
-        
-        
-        if(mac_node_iface.size() > 1) {
+
+
+        if (mac_node_iface.size() > 1) {
             long min = Long.MAX_VALUE;
             String[] val_min = new String[2];
             for (Map.Entry<String, String[]> entry : mac_node_iface.entrySet()) {
                 String mac = entry.getKey();
                 String[] val = entry.getValue();
-                if(mac.matches("[0-9a-f]{12}")) {
+                if (mac.matches("[0-9a-f]{12}")) {
                     long l = Long.parseLong(mac, 16);
-                    if(l < min && l > 1) {
+                    if (l < min && l > 1) {
                         min = l;
                         val_min = val;
                     }
                 }
-            }            
-            
-            String mac_baze_tmp = String.format("%12x", min-1).trim();
+            }
+
+            String mac_baze_tmp = String.format("%12x", min - 1).trim();
             String mac_baze = "0".repeat(Math.max(0, 12 - mac_baze_tmp.length())) +
                     mac_baze_tmp;
             String[] val_baze = new String[2];
             val_baze[0] = val_min[0];
             val_baze[1] = "baze";
             mac_node_iface.put(mac_baze, val_baze);
-        
+
             // append mac+1
             Map<String, String[]> mac_node_iface_new = new HashMap();
             for (Map.Entry<String, String[]> entry : mac_node_iface.entrySet()) {
                 String mac = entry.getKey();
                 String[] val = entry.getValue();
-                if(mac.matches("[0-9a-f]{12}")) {
+                if (mac.matches("[0-9a-f]{12}")) {
                     long l = Long.parseLong(mac, 16);
-                    String mac_plus1_tmp = String.format("%12x", l+1).trim();
+                    String mac_plus1_tmp = String.format("%12x", l + 1).trim();
                     StringBuilder mac_plus1 = new StringBuilder();
                     mac_plus1.append("0".repeat(Math.max(0, 12 - mac_plus1_tmp.length())));
                     mac_plus1.append(mac_plus1_tmp);
-                    if(mac_node_iface.get(mac_plus1.toString()) == null) {
+                    if (mac_node_iface.get(mac_plus1.toString()) == null) {
                         String[] mas = new String[2];
                         mas[0] = val[0];
                         mas[1] = "unknown";
@@ -10297,10 +10343,10 @@ public class Utils {
             }
             mac_node_iface.putAll(mac_node_iface_new);
         }
-            
+
         return mac_node_iface;
     }
-    
+
 //    private Map<String, String> getIpFromNodes(Map<String, Map> nodes_information) {
 //        Map<String, String> result = new HashMap();
 //        for (Map.Entry<String, Map> entry : nodes_information.entrySet()) {
@@ -10315,8 +10361,8 @@ public class Utils {
 //        return result;
 //    }
 
-    private Map<String, String> getIpFromNodes(Map<String, Map> nodes_information, 
-            ArrayList<String> networks, ArrayList<String> not_correct_networks) {
+    private Map<String, String> getIpFromNodes(Map<String, Map> nodes_information,
+                                               ArrayList<String> networks, ArrayList<String> not_correct_networks) {
         Map<String, String> result = new HashMap();
 
         Map<String, Integer> node_priority = new HashMap();
@@ -10404,7 +10450,7 @@ public class Utils {
                         && !mac.startsWith("01:00:00:00")
                         && (mac.matches("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
                         || mac.matches("^[0-9A-Fa-f]{4}\\.[0-9A-Fa-f]{4}\\.[0-9A-Fa-f]{4}$"))) {
-                    if(!result.contains(mac)) {
+                    if (!result.contains(mac)) {
                         result.add(mac);
                     }
                 }
@@ -10420,7 +10466,7 @@ public class Utils {
         Map<String, Map> map_interf = (node_information).get("interfaces");
         if (map_interf != null && !map_interf.isEmpty()) {
             for (Map.Entry<String, Map> entry1 : map_interf.entrySet()) {
-                String mac_find = null; 
+                String mac_find = null;
                 String mac = (String) entry1.getValue().get("mac");
                 if (mac != null && !mac.equals("00:00:00:00:00:00")
                         && !mac.equals("0000.0000.0000")
@@ -10428,7 +10474,7 @@ public class Utils {
                         || mac.matches("^[0-9A-Fa-f]{4}\\.[0-9A-Fa-f]{4}\\.[0-9A-Fa-f]{4}$"))) {
                     mac_find = mac;
                 }
-                
+
                 ArrayList<String> ip_find_list = new ArrayList();
                 ArrayList<String> list = (ArrayList) entry1.getValue().get("ip");
                 String operation_status = (String) entry1.getValue().get("operation_status");
@@ -10444,9 +10490,9 @@ public class Utils {
                             ip_find_list.add(ip);
                         }
                     }
-                }               
-                if(mac_find != null && !ip_find_list.isEmpty()) {
-                    for(String ip_find : ip_find_list) {
+                }
+                if (mac_find != null && !ip_find_list.isEmpty()) {
+                    for (String ip_find : ip_find_list) {
                         result.put(ip_find, mac_find);
                     }
                 }
@@ -10454,16 +10500,16 @@ public class Utils {
         }
 
         return result;
-    }    
-    
+    }
+
     public String nameToIpExt(String name, Map<String, String[]> mac_node) {
         Pattern p0 = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+)");
         Matcher m0 = p0.matcher(name);
         if (m0.find()) {
             String ip = m0.group(1);
-            if(ip != null)
+            if (ip != null)
                 return ip;
-        } 
+        }
         String result = name;
 
         String mac_extract = extractMACFromName1(name);
@@ -10474,7 +10520,7 @@ public class Utils {
             if (mas != null && mas.length == 2) {
                 result = mas[0];
 //                System.out.println("Replace - "+mac_extract+" to - "+result);
-            } 
+            }
         }
         return result;
     }
@@ -10498,7 +10544,7 @@ public class Utils {
         }
         return mac_extract;
     }
-    
+
     private String extractMACFromName1(String name) {
         String mac_extract = "";
         name = name.toLowerCase();
@@ -10517,7 +10563,7 @@ public class Utils {
             mac_extract = m2.group(1);
         }
         return mac_extract;
-    }    
+    }
 
     private boolean checkMACFromName(String name) {
         name = name.toLowerCase();
@@ -10711,7 +10757,7 @@ public class Utils {
                     break;
                 }
             }
-            if(!find) {
+            if (!find) {
                 for (Map.Entry<String, String> entry : ifaceid_ifacename.entrySet()) {
                     String iface_id = entry.getKey();
                     String iface_name = entry.getValue();
@@ -10734,9 +10780,9 @@ public class Utils {
         ArrayList<String> num_iface_list = new ArrayList();
         ArrayList<String> prefix_list = new ArrayList();
         while (m.find()) {
-            if(m.group(1) != null && !m.group(1).isEmpty())
+            if (m.group(1) != null && !m.group(1).isEmpty())
                 prefix_list.add(m.group(1));
-            if(m.group(2) != null && !m.group(2).isEmpty())
+            if (m.group(2) != null && !m.group(2).isEmpty())
                 num_iface_list.add(m.group(2));
         }
         if (!num_iface_list.isEmpty()) {
@@ -10745,25 +10791,25 @@ public class Utils {
         if (!prefix_list.isEmpty()) {
             prefix = String.join(":", prefix_list);
         }
-        String [] res = new String[2];
-        if(prefix != null)
+        String[] res = new String[2];
+        if (prefix != null)
             res[0] = prefix.toLowerCase().trim();
-        if(num_iface != null)
+        if (num_iface != null)
             res[1] = num_iface;
 
         return res;
     }
 
     public boolean equalsIfaceName(String iface1, String iface2) {
-        if(iface1.equals(iface2))
+        if (iface1.equals(iface2))
             return true;
         String[] prefix_num_iface1 = get_prefix_num_iface(iface1);
         String[] prefix_num_iface2 = get_prefix_num_iface(iface2);
 //        System.out.println(num_iface1 + "  -  " + num_iface2);
 
-        if(prefix_num_iface1[1] != null && prefix_num_iface2[1] != null && prefix_num_iface1[1].equals(prefix_num_iface2[1]) &&
+        if (prefix_num_iface1[1] != null && prefix_num_iface2[1] != null && prefix_num_iface1[1].equals(prefix_num_iface2[1]) &&
                 prefix_num_iface1[0] != null && prefix_num_iface2[0] != null &&
-                ( prefix_num_iface1[0].startsWith(prefix_num_iface2[0]) || prefix_num_iface2[0].startsWith(prefix_num_iface1[0]) )
+                (prefix_num_iface1[0].startsWith(prefix_num_iface2[0]) || prefix_num_iface2[0].startsWith(prefix_num_iface1[0]))
         ) {
             return true;
         }
@@ -10846,7 +10892,7 @@ public class Utils {
 //        }
 //    }
 
-//    private String[] FindIfaceFromNodeLevenstein(String iface, ArrayList<ArrayList<String>> ifaceid_ifacename_list) {
+    //    private String[] FindIfaceFromNodeLevenstein(String iface, ArrayList<ArrayList<String>> ifaceid_ifacename_list) {
 //        ArrayList<ArrayList> list = new ArrayList();
 //        ArrayList id_iface_distance_list = new ArrayList();
 //        for(ArrayList<String> ifaceid_ifacename : ifaceid_ifacename_list) {
@@ -10916,102 +10962,97 @@ public class Utils {
 //    }      
     // remove duplicate nodes in all areas am mac addresses, ip list and sysname
     public Map<String, Map> removeDuplicateNodes(Map<String, Map> informationFromNodesAllAreas, Map<String, ArrayList<String>> area_networks) {
-        Map<String, String> mac_excluded = new HashMap();
-        for (Map.Entry<String, Map> area : informationFromNodesAllAreas.entrySet()) {
-            String area_name = area.getKey();
-            Map val = area.getValue();
-            Map<String, Map> nodes_information = (Map<String, Map>) val.get("nodes_information");
-            if (nodes_information != null) {
-                Map<String, Integer> node_priority = new HashMap();
-                for (Map.Entry<String, Map> entry : nodes_information.entrySet()) {
-                    String node = entry.getKey();
-                    int pos = 0;
-                    boolean found = false;
-                    ArrayList<String> networks = area_networks.get(area_name);
-                    for (String network : networks) {
-                        if (inside_Network(node, network)) {
-                            found = true;
-                            break;
-                        }
-                        pos = pos + 1;
-                    }
-                    if (found) {
-                        node_priority.put(node, pos);
-                    }
+        int count = 0;
+        while(true) {
+            Map<String, Map> area_Node_NodePriority = getArea_Node_NodePriority(informationFromNodesAllAreas, Neb.area_networks);
+//        --------------------------------------
+
+            Map area_node_info_brief = getNodeInfoBrief(informationFromNodesAllAreas);
+            Map<String, Map> area_mainnode_nodelist = new HashMap();
+            for (Map.Entry<String, Map> item : ((Map<String, Map>) area_node_info_brief).entrySet()) {
+                String area_name = item.getKey();
+                Map<String, Map> nodes_links = item.getValue();
+                Map<String, ArrayList<String>> mainnode_nodelist = new HashMap();
+                ArrayList<ArrayList> nodes_info_list = new ArrayList();
+                for (Map.Entry<String, Map> item1 : nodes_links.entrySet()) {
+                    String node = item1.getKey();
+                    Map val = item1.getValue();
+                    ArrayList tmp = new ArrayList();
+                    tmp.add(node);
+                    tmp.add(val);
+                    nodes_info_list.add(tmp);
                 }
 
-                Map<String, Map> nodes_information_new = new HashMap();
-                for (Map.Entry<String, Map> entry : nodes_information.entrySet()) {
-                    String node = entry.getKey();
-//                    if(node.equals("10.100.45.254"))
-//                        System.out.println("111111");
-                    Map<String, Map> node_information = entry.getValue();
-                    ArrayList<String> mac_list = getMACFromNode(node_information);
-                    String mac_finded = "";
-                    int mac_count = 0;
-                    for (String mac : mac_list) {
-                        mac = mac.replace(":", "").replace(".", "").toLowerCase();
-                        if (mac_excluded.get(mac) != null) {
-                            mac_count = mac_count + 1;
-                            mac_finded = mac;
+                Map<String, String> exclude = new HashMap();
+                for (int i = 0; i < nodes_info_list.size(); i++) {
+                    ArrayList<String> duplicate_nodes_list = new ArrayList();
+                    String node1 = (String) nodes_info_list.get(i).get(0);
+                    Map info1 = (Map) nodes_info_list.get(i).get(1);
+                    if (exclude.get(node1) == null) {
+                        for (int j = i + 1; j < nodes_info_list.size(); j++) {
+                            String node2 = (String) nodes_info_list.get(j).get(0);
+                            Map info2 = (Map) nodes_info_list.get(j).get(1);
+                            if (exclude.get(node2) == null) {
+                                if (isEqualsNodes(info1, info2)) {
+                                    if (!duplicate_nodes_list.contains(node2)) {
+                                        duplicate_nodes_list.add(node2);
+                                    }
+                                    exclude.put(node2, node2);
+                                }
+                            }
                         }
                     }
-                    boolean mac_find = false;
-                    if (mac_count != 0 && mac_count == mac_list.size()) {
-                        mac_find = true;
-                    }
-                    if (!mac_find) {
-                        nodes_information_new.put(node, node_information);
-//                        ArrayList list = new ArrayList();
-//                        list.add(node);
-//                        list.add(area_name);
-//                        list.add(node_information);
-                        for (String mac : mac_list) {
-                            mac_excluded.put(mac.replace(":", "").replace(".", "").toLowerCase(), node);
+
+                    if (!duplicate_nodes_list.isEmpty() && informationFromNodesAllAreas.get(area_name) != null &&
+                            informationFromNodesAllAreas.get(area_name).get("nodes_information") != null) {
+                        duplicate_nodes_list.add(node1);
+                        exclude.put(node1, node1);
+                        Map<String, Map> nodes_info = (Map<String, Map>) informationFromNodesAllAreas.get(area_name).get("nodes_information");
+                        String main_node = getPriorityNode(duplicate_nodes_list, nodes_info, area_Node_NodePriority.get(area_name));
+
+                        ArrayList<String> duplicate_nodes_list_new = new ArrayList();
+                        if (main_node != null) {
+                            for (String item1 : duplicate_nodes_list) {
+                                if (!item1.equals(main_node)) {
+                                    duplicate_nodes_list_new.add(item1);
+                                }
+                            }
                         }
-                    } else {
-                        String node_exist = mac_excluded.get(mac_finded);
-                        if ((node_priority.get(node) != null && node_priority.get(node_exist) != null && node_priority.get(node) < node_priority.get(node_exist)) ||
-                                (node_priority.get(node) != null && node_priority.get(node_exist) == null)
-                        ) {
-                            nodes_information_new.remove(node_exist);
-                            nodes_information_new.put(node, node_information);
-                            logger.Println("Replace nodes_information_new: " + node_exist + " to: " + node, logger.DEBUG);
-                        } else {
-                            logger.Println("Dublicate node="+node+" to: "+node_exist, logger.DEBUG);
-                        }
+                        mainnode_nodelist.put(main_node, duplicate_nodes_list_new);
                     }
                 }
-                val.remove("nodes_information");
-                val.put("nodes_information", nodes_information_new);
+                if (!mainnode_nodelist.isEmpty()) {
+                    area_mainnode_nodelist.put(area_name, mainnode_nodelist);
+                }
             }
-            // remove links
-            nodes_information = (Map<String, Map>) val.get("nodes_information");
-            ArrayList<ArrayList<String>> links = (ArrayList<ArrayList<String>>) val.get("links");
-            if (links != null && nodes_information != null) {
-                ArrayList<ArrayList<String>> links_new = new ArrayList();
-                for (ArrayList<String> link : links) {
-                    String node1 = link.get(0);
-                    String iface1 = link.get(1);
-                    String node2 = link.get(2);
-                    String iface2 = link.get(3);
-                    boolean find = false;
-                    for (Map.Entry<String, Map> entry : nodes_information.entrySet()) {
-                        String node = entry.getKey();
-                        if (node.equals(node1) || node.equals(node2)) {
-                            links_new.add(link);
-                            find = true;
-                            break;
+            if (area_mainnode_nodelist.isEmpty()) {
+                break;
+            }
+
+            for (Map.Entry<String, Map> item : area_mainnode_nodelist.entrySet()) {
+                String area_name = item.getKey();
+                Map<String, ArrayList<String>> mainnode_nodelist = item.getValue();
+                if (informationFromNodesAllAreas.get(area_name) != null) {
+                    Map area_info = informationFromNodesAllAreas.get(area_name);
+
+                    ArrayList<String[]> replace_nodes = new ArrayList();
+                    for (Map.Entry<String, ArrayList<String>> item1 : mainnode_nodelist.entrySet()) {
+                        String main_node = item1.getKey();
+                        ArrayList<String> node_list = item1.getValue();
+                        for (String node : node_list) {
+                            String[] tmp = new String[2];
+                            tmp[0] = node;
+                            tmp[1] = main_node;
+                            replace_nodes.add(tmp);
                         }
                     }
-                    if (!find) {
-                        logger.Println("Remove link: " + node1 + ", " + iface1 + " <---> " + node2 + "," + iface2, logger.DEBUG);
-                    }
+                    applyInfo(area_info, replace_nodes);
                 }
-                val.remove("links");
-                val.put("links", links_new);
             }
+
+            count++;
         }
+
         return informationFromNodesAllAreas;
     }
 
@@ -11079,7 +11120,7 @@ public class Utils {
 //        ru.kos.neb.neb_lib.Utils.DEBUG = true;
         for (Map.Entry<String, Map> area : ((Map<String, Map>) informationFromNodesAllAreas).entrySet()) {
             String area_name = area.getKey();
-            logger.Println("area - "+area_name, logger.DEBUG);
+            logger.Println("area - " + area_name, logger.DEBUG);
             ArrayList<String[]> node_community_version_area = node_community_version.get(area_name);
             if (node_community_version_area != null && !node_community_version_area.isEmpty()) {
                 Map<String, Map<String, String>> node_ifacename_ifaceid = getNode_Ifaceid_Ifacename(node_community_version_area);
@@ -11154,7 +11195,7 @@ public class Utils {
                             String type = (String) map_tmp.get("type");
                             if (type != null) {
                                 switch (type) {
-                                    case "cdp" ->  {
+                                    case "cdp" -> {
                                         ArrayList<String> list1 = nodes_dp_tmp.get(node1);
                                         if (list1 != null) {
                                             list1.add("cdp");
@@ -11172,7 +11213,7 @@ public class Utils {
                                         }
                                         nodes_dp_tmp.put(node2, list1);
                                     }
-                                    case "lldp" ->  {
+                                    case "lldp" -> {
                                         ArrayList<String> list1 = nodes_dp_tmp.get(node1);
                                         if (list1 != null) {
                                             list1.add("lldp");
@@ -11190,7 +11231,7 @@ public class Utils {
                                         }
                                         nodes_dp_tmp.put(node2, list1);
                                     }
-                                    default ->  {
+                                    default -> {
                                         ArrayList<String> list1 = nodes_dp_tmp.get(node1);
                                         if (list1 != null) {
                                             list1.add("");
@@ -11281,7 +11322,7 @@ public class Utils {
                             } else {
                                 mas[3] = "";
                             }
-                            node_community_version_dp.add(mas);                            
+                            node_community_version_dp.add(mas);
                         }
 
                     }
@@ -11309,7 +11350,7 @@ public class Utils {
         return node_protocol_accounts_new;
     }
 
-//    public ArrayList<String[]> ReadARP_Mac_FromNodes(String filename) {
+    //    public ArrayList<String[]> ReadARP_Mac_FromNodes(String filename) {
 //        ArrayList<String[]> result = new ArrayList();
 //        
 //        try {
@@ -11436,7 +11477,7 @@ public class Utils {
 
         return true;
     }
-    
+
     public boolean deleteKey(String key_str, Map MAP_INFO) {
         if (key_str.isEmpty() || key_str.equals("/")) {
             return false;
@@ -11462,12 +11503,12 @@ public class Utils {
     }
 
     public ArrayList deleteFromList(Object del, ArrayList list) {
-        ArrayList list_new = new ArrayList(); 
+        ArrayList list_new = new ArrayList();
         if (del instanceof String) {
             list.remove(del);
         } else if (del instanceof List) {
             if (list.get(0) instanceof List) {
-                for(ArrayList<String> item : (ArrayList<ArrayList>)list) {
+                for (ArrayList<String> item : (ArrayList<ArrayList>) list) {
 //                    if(item.size() == ((List) del).size()) {
 //                        boolean is_equiv = true;
 //                        for(int i=0; i<item.size(); i++) {
@@ -11483,26 +11524,26 @@ public class Utils {
 //                    } else {
 //                        list_new.add(item);
 //                    }
-                    if(!item.equals(del)) {
+                    if (!item.equals(del)) {
                         list_new.add(item);
                     }
                 }
             }
-        } else if (del instanceof String[]) {        
+        } else if (del instanceof String[]) {
             if (list.get(0) instanceof String[]) {
-                for(String[] item : (ArrayList<String[]>)list) {
-                    if(!Arrays.equals(item, (String[])del)) {
+                for (String[] item : (ArrayList<String[]>) list) {
+                    if (!Arrays.equals(item, (String[]) del)) {
                         list_new.add(item);
                     }
-                }                
+                }
             }
         }
-        if(list_new.isEmpty())
+        if (list_new.isEmpty())
             return list;
         else
             return list_new;
     }
-    
+
     private Object strToObject(String val) {
         JSONParser parser = new JSONParser();
         try {
@@ -11625,7 +11666,7 @@ public class Utils {
         return result;
     }
 
-//    private String[] GetParentKeyAndKey(String key_str, Map MAP_INFO) {
+    //    private String[] GetParentKeyAndKey(String key_str, Map MAP_INFO) {
 //        String[] result = new String[2];
 //        
 //        String parent = "";
@@ -11975,7 +12016,7 @@ public class Utils {
         return result;
     }
 
-//    public Object StringToValue(String str) {
+    //    public Object StringToValue(String str) {
 //        Object result = null;
 //        Pattern p1 = Pattern.compile("^\\s*(.*?)\\s*$");
 //        Matcher m1 = p1.matcher(str);
@@ -11998,7 +12039,7 @@ public class Utils {
 
         str = URLDecoder.decode(str, StandardCharsets.UTF_8);
         Object obj = strToObject(str);
-        if(obj == null) {
+        if (obj == null) {
             if (setKey(key, str, MAP_INFO)) {
                 result = true;
             }
@@ -12107,7 +12148,7 @@ public class Utils {
                             String mac;
                             if (val1.get("general") != null && ((Map) val1.get("general")).get("base_address") != null) {
                                 mac = (String) ((Map) val1.get("general")).get("base_address");
-                                Map value = (Map)getKey("/" + area + "/" + mac, mac_attribute);
+                                Map value = (Map) getKey("/" + area + "/" + mac, mac_attribute);
                                 if (value != null) {
                                     String image = (String) value.get("image");
                                     String image_auto = (String) value.get("image_auto");
@@ -12137,7 +12178,7 @@ public class Utils {
                                 if (!list_ip.isEmpty()) {
                                     for (String ip : list_ip) {
                                         if (!ip.startsWith("127.")) {
-                                            Map value = (Map)getKey("/" + area + "/" + ip, node_attribute);
+                                            Map value = (Map) getKey("/" + area + "/" + ip, node_attribute);
                                             if (value != null) {
                                                 String image = (String) value.get("image");
                                                 String image_auto = (String) value.get("image_auto");
@@ -12160,7 +12201,7 @@ public class Utils {
                                         }
                                     }
                                 } else {
-                                    Map value = (Map)getKey("/" + area + "/" + node, node_attribute);
+                                    Map value = (Map) getKey("/" + area + "/" + node, node_attribute);
                                     if (value != null) {
                                         String image = (String) value.get("image");
                                         String image_auto = (String) value.get("image_auto");
@@ -12260,10 +12301,10 @@ public class Utils {
                     String node = entry1.getKey();
                     ArrayList<ArrayList<String>> val1 = entry1.getValue();
                     ArrayList<String> item = val1.get(0);
-                    if(item.get(0).equals("snmp")) {
+                    if (item.get(0).equals("snmp")) {
                         String[] mas = new String[2];
-                        mas[0]=item.get(1);
-                        mas[1]=item.get(2);
+                        mas[0] = item.get(1);
+                        mas[1] = item.get(2);
                         map_node_tmp.put(node, mas);
                     }
                 }
@@ -12503,7 +12544,7 @@ public class Utils {
 
     public boolean inside_Network(String ip, String network) {
         if (ip.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
-            if(ip.equals(network.split("[/\\s+]")[0]))
+            if (ip.equals(network.split("[/\\s+]")[0]))
                 return true;
             if (network.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+\\s+\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
                 String[] net_mask = network.split("\\s+");
@@ -12527,18 +12568,18 @@ public class Utils {
             return false;
         }
     }
-    
+
     public boolean inside_Networks(String ip, ArrayList<String> networks) {
         boolean is_inside = false;
-        for(String network : networks) {
-            if(inside_Network(ip, network)) {
+        for (String network : networks) {
+            if (inside_Network(ip, network)) {
                 is_inside = true;
                 break;
             }
         }
         return is_inside;
     }
-    
+
 
     public Map<String, ArrayList> getForkList(Map<String, Map> INFO) {
         Map<String, ArrayList> result = new HashMap();
@@ -12561,11 +12602,11 @@ public class Utils {
     }
 
     private ArrayList getFork(ArrayList<ArrayList<String>> links_base,
-            ArrayList<String[]> node_community_version_dp_list) {
+                              ArrayList<String[]> node_community_version_dp_list) {
 
         ArrayList<ArrayList<String>> links = new ArrayList();
         for (ArrayList<String> link : links_base) {
-            if(link.get(0) != null && link.get(2) != null && link.get(3) != null && link.get(5) != null) {
+            if (link.get(0) != null && link.get(2) != null && link.get(3) != null && link.get(5) != null) {
                 links.add(link);
             }
 //            System.out.println(link);
@@ -12708,7 +12749,7 @@ public class Utils {
     }
 
     public Map<String, ArrayList> getForkLinks(Map<String, ArrayList> area_forks, Map<String, Map> INFO,
-            Map<String, ArrayList<String[]>> area_arp_mac_table) {
+                                               Map<String, ArrayList<String[]>> area_arp_mac_table) {
 
         Map<String, ArrayList> area_add_del_links = new HashMap();
         for (Map.Entry<String, Map> area : INFO.entrySet()) {
@@ -12803,7 +12844,7 @@ public class Utils {
                             if (!find) {
                                 for (String[] child1 : children_list) {
                                     boolean find1 = false;
-                                    if(arp_mac_table != null) {
+                                    if (arp_mac_table != null) {
                                         for (String[] nodeport_ip_mac : arp_mac_table) {
                                             if (nodeport_ip_mac[0].equals(lldp_node[0]) && nodeport_ip_mac[3].equals(child1[0])) {
                                                 ArrayList<String> link = new ArrayList();
@@ -12837,7 +12878,7 @@ public class Utils {
                                                 link.add(child[1]);
                                                 link.add(child[2]);
                                                 del_links.add(link);
-    //                                            System.out.println("Remove fork link from links "+parent_node_iface[0]+" "+parent_node_iface[2]+": "+link);                                            
+                                                //                                            System.out.println("Remove fork link from links "+parent_node_iface[0]+" "+parent_node_iface[2]+": "+link);
                                                 logger.Println("Remove fork link from links " + parent_node_iface[0] + " " + parent_node_iface[2] + ": " + link, logger.DEBUG);
                                                 break;
                                             }
@@ -12931,8 +12972,7 @@ public class Utils {
                                 break;
                             }
                         }
-                        if (found)
-                        {
+                        if (found) {
                             logger.Println("Remove link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + " --- " + link.get(6), logger.DEBUG);
                         } else {
                             links_new.add(link);
@@ -12960,7 +13000,7 @@ public class Utils {
                     String node = entry1.getKey();
                     Map val1 = entry1.getValue();
                     if (val1 != null) {
-                        Map value = (Map)getKey("/" + area + "/" + node, node_attribute);
+                        Map value = (Map) getKey("/" + area + "/" + node, node_attribute);
                         if (value != null) {
                             setKey("/" + area + "/" + node, val1, node_attribute);
                         } else {
@@ -13058,6 +13098,23 @@ public class Utils {
     public Map<String, Map> setAttributeOld(Map<String, Map> info_old, String node_attribute_old_file) {
         Map<String, Map> area_nodes_attribute_old = readJSONFile(node_attribute_old_file);
         Map<String, Map> node_attribute_last_day = getNodesAttributes(info_old);
+        Map<String, Map> area_mac_node = new HashMap();
+        for (Map.Entry<String, Map> entry : area_nodes_attribute_old.entrySet()) {
+            String area = entry.getKey();
+            Map<String, Map> area_info = entry.getValue();
+            Map<String, String> mac_node = new HashMap();
+            for (Map.Entry<String, Map> entry1 : area_info.entrySet()) {
+                String node = entry1.getKey();
+                Map node_info = entry1.getValue();
+                String mac = (String) node_info.get("base_address");
+                if (mac != null && !mac.startsWith("00:00:00:00") && !mac.startsWith("01:00:00:00")) {
+                    mac_node.put(mac, node);
+                }
+            }
+            if (mac_node.size() > 0) {
+                area_mac_node.put(area, mac_node);
+            }
+        }
 
         for (Map.Entry<String, Map> area : node_attribute_last_day.entrySet()) {
             String area_name = area.getKey();
@@ -13066,32 +13123,38 @@ public class Utils {
 //            if(area_node_attribute_old.get(area_name) != null) {
 //                nodes_attribute_old = area_node_attribute_old.get(area_name);
 //            }
-            
+
             for (Map.Entry<String, Map> iter : nodes_attr.entrySet()) {
                 String node = iter.getKey();
                 Map val = iter.getValue();
 
-                String base_address = (String)val.get("base_address");
-                String image = (String)val.get("image");
-                String image_auto = (String)val.get("image_auto");
-                ArrayList<String> xy = (ArrayList)val.get("xy");
+                String base_address = (String) val.get("base_address");
+                String image = (String) val.get("image");
+                String image_auto = (String) val.get("image_auto");
+                ArrayList<String> xy = (ArrayList) val.get("xy");
                 Map attribute = new HashMap();
-                if(image != null)
+                if (image != null)
                     attribute.put("image", image);
-                if(image_auto != null)
+                if (image_auto != null)
                     attribute.put("image_auto", image_auto);
-                if(xy != null)
+                if (xy != null)
                     attribute.put("xy", xy);
-                if(base_address != null)
+                if (base_address != null)
                     attribute.put("base_address", base_address);
-                if(area_nodes_attribute_old.get(area_name) == null) {
+                String node_replaced = null;
+                if (area_mac_node.get(area_name) != null) {
+                    node_replaced = (String) area_mac_node.get(area_name).get(base_address);
+                }
+                if (area_nodes_attribute_old.get(area_name) == null) {
                     Map node_attribute = new HashMap();
                     node_attribute.put(node, attribute);
                     area_nodes_attribute_old.put(area_name, node_attribute);
                 } else {
+                    if (node_replaced != null && !node.equals(node_replaced)) {
+                        area_nodes_attribute_old.get(area_name).remove(node_replaced);
+                    }
                     area_nodes_attribute_old.get(area_name).put(node, attribute);
                 }
-//                area_node_attribute_old.put(area_name, nodes_attribute_old);
             }
         }
 
@@ -13100,113 +13163,184 @@ public class Utils {
 
     private ArrayList<ArrayList<String>> removeDuplicateLinks(ArrayList<ArrayList<String>> links) {
         // remove duplicate links
+        ArrayList<String[]> remove_links_list_all = new ArrayList();
+        Map<Integer, Integer> exclude_positions = new HashMap();
         for (int i = 0; i < links.size(); i++) {
-            ArrayList<String> link = links.get(i);
-            String node1 = link.get(0);
-            String id1 = link.get(1);
-            String iface1 = link.get(2);
-            String node2 = link.get(3);
-            String id2 = link.get(4);
-            String iface2 = link.get(5);
-//                        boolean find = false;
-            for (int j = i + 1; j < links.size(); j++) {
-                String node3 = links.get(j).get(0);
-                String id3 = links.get(j).get(1);
-                String iface3 = links.get(j).get(2);
-                String node4 = links.get(j).get(3);
-                String id4 = links.get(j).get(4);
-                String iface4 = links.get(j).get(5);
-                
-//                if ((node1.equals(node3) && id1.equals(id3) && node2.equals(node4))
-//                        || (node1.equals(node4) && id1.equals(id4) && node2.equals(node3))
-//                        || (node1.equals(node3) && node2.equals(node4) && id2.equals(id4))
-//                        || (node1.equals(node4) && node2.equals(node3) && id2.equals(id3))) {
-//                    links.remove(j);
-//                    j--;
-//                    logger.Println("Normalize map Link: " + node1 + " " + iface1 + " <---> " + node2 + " " + iface2 + " duplicate to link:" + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-//                    logger.Println("Remove Link: " + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-//                }
-                
-                if(
-                        (id1.matches("\\d+") && id3.matches("\\d+")) ||
-                        (id1.matches("\\d+") && id4.matches("\\d+")) ||
-                        (id2.matches("\\d+") && id4.matches("\\d+")) ||
-                        (id2.matches("\\d+") && id3.matches("\\d+"))
-                    ) {
-                    if (id1.matches("\\d+") && id3.matches("\\d+") && node1.equals(node3) && id1.equals(id3) && node2.equals(node4)) {
-                        links.remove(j);
-                        j--;
-                        logger.Println("Normalize map Link: " + node1 + " " + iface1 + " <---> " + node2 + " " + iface2 + " duplicate to link:" + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                        logger.Println("Remove Link: " + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                    } else if (id1.matches("\\d+") && id4.matches("\\d+") && node1.equals(node4) && id1.equals(id4) && node2.equals(node3)) {
-                        links.remove(j);
-                        j--;
-                        logger.Println("Normalize map Link: " + node1 + " " + iface1 + " <---> " + node2 + " " + iface2 + " duplicate to link:" + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                        logger.Println("Remove Link: " + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                    } else if (id2.matches("\\d+") && id4.matches("\\d+") && node1.equals(node3) && node2.equals(node4) && id2.equals(id4)) {
-                        links.remove(j);
-                        j--;
-                        logger.Println("Normalize map Link: " + node1 + " " + iface1 + " <---> " + node2 + " " + iface2 + " duplicate to link:" + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                        logger.Println("Remove Link: " + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                    } else if (id2.matches("\\d+") && id3.matches("\\d+") && node1.equals(node4) && node2.equals(node3) && id2.equals(id3)) {
-                        links.remove(j);
-                        j--;
-                        logger.Println("Normalize map Link: " + node1 + " " + iface1 + " <---> " + node2 + " " + iface2 + " duplicate to link:" + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                        logger.Println("Remove Link: " + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                    }
-
+//            System.out.println("i="+i);
+            ArrayList<String[]> remove_links_list = new ArrayList();
+            if (exclude_positions.get(i) == null) {
+                String node1 = "";
+                String id1 = "";
+                String iface1 = "";
+                String node2 = "";
+                String id2 = "";
+                String iface2 = "";
+                if (links.get(i).size() == 5) {
+                    node1 = links.get(i).get(0);
+                    iface1 = links.get(i).get(1);
+                    node2 = links.get(i).get(2);
+                    iface2 = links.get(i).get(3);
                 } else {
-                    if ((node1.equals(node3) && equalsIfaceName(iface1, iface3) && node2.equals(node4))
-                            || (node1.equals(node4) && equalsIfaceName(iface1, iface4) && node2.equals(node3))
-                            || (node1.equals(node3) && node2.equals(node4) && equalsIfaceName(iface2, iface4))
-                            || (node1.equals(node4) && node2.equals(node3) && equalsIfaceName(iface2, iface3))) {
-                        links.remove(j);
-                        j--;
-                        logger.Println("Normalize map Link: " + node1 + " " + iface1 + " <---> " + node2 + " " + iface2 + " duplicate to link:" + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                        logger.Println("Remove Link: " + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                    } else if (iface2.equals("unknown")) {
-                        if ((node1.equals(node3) && equalsIfaceName(iface1, iface3) && node2.equals(node4))
-                                || (node1.equals(node4) && equalsIfaceName(iface1, iface4) && node2.equals(node3))) {
-                            ArrayList<String> item = new ArrayList(links.get(j));
-                            links.set(i, item);
-                            logger.Println("Normalize map Link: " + node1 + " " + iface1 + " <---> " + node2 + " " + iface2 + " duplicate to link:" + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                            logger.Println("Replace Link: " + node1 + " " + iface1 + " <---> " + node2 + " " + iface2 + " to link:" + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
+                    node1 = links.get(i).get(0);
+                    id1 = links.get(i).get(1);
+                    iface1 = links.get(i).get(2);
+                    node2 = links.get(i).get(3);
+                    id2 = links.get(i).get(4);
+                    iface2 = links.get(i).get(5);
+                }
+                String[] mas = new String[5];
+                mas[0] = node1;
+                mas[1] = iface1;
+                mas[2] = node2;
+                mas[3] = iface2;
+                mas[4] = String.valueOf(i);
+                remove_links_list.add(mas);
+
+                for (int j = i + 1; j < links.size(); j++) {
+//                System.out.println("  j="+j);
+                    if (exclude_positions.get(j) == null) {
+                        String node3 = "";
+                        String id3 = "";
+                        String iface3 = "";
+                        String node4 = "";
+                        String id4 = "";
+                        String iface4 = "";
+                        if (links.get(j).size() == 5) {
+                            node3 = links.get(j).get(0);
+                            iface3 = links.get(j).get(1);
+                            node4 = links.get(j).get(2);
+                            iface4 = links.get(j).get(3);
+                        } else {
+                            node3 = links.get(j).get(0);
+                            id3 = links.get(j).get(1);
+                            iface3 = links.get(j).get(2);
+                            node4 = links.get(j).get(3);
+                            id4 = links.get(j).get(4);
+                            iface4 = links.get(j).get(5);
                         }
-                    } else if (iface4.equals("unknown")) {
-                        if ((node1.equals(node3) && equalsIfaceName(iface1, iface3) && node2.equals(node4))
-                                || (node1.equals(node4) && node2.equals(node3) && equalsIfaceName(iface2, iface3))) {
-                            links.remove(j);
-                            j--;
-                            logger.Println("Normalize map Link: " + node1 + " " + iface1 + " <---> " + node2 + " " + iface2 + " duplicate to link:" + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
-                            logger.Println("Remove Link: " + node3 + " " + iface3 + " <---> " + node4 + " " + iface4, logger.DEBUG);
+
+                        if (
+                                (id1.matches("\\d+") && id3.matches("\\d+")) ||
+                                        (id1.matches("\\d+") && id4.matches("\\d+")) ||
+                                        (id2.matches("\\d+") && id4.matches("\\d+")) ||
+                                        (id2.matches("\\d+") && id3.matches("\\d+"))
+                        ) {
+                            if (
+                                    (id1.matches("\\d+") && id3.matches("\\d+") && node1.equals(node3) && id1.equals(id3) && node2.equals(node4)) ||
+                                            (id1.matches("\\d+") && id4.matches("\\d+") && node1.equals(node4) && id1.equals(id4) && node2.equals(node3)) ||
+                                            (id2.matches("\\d+") && id4.matches("\\d+") && node1.equals(node3) && node2.equals(node4) && id2.equals(id4)) ||
+                                            (id2.matches("\\d+") && id3.matches("\\d+") && node1.equals(node4) && node2.equals(node3) && id2.equals(id3))
+                            ) {
+                                String[] mas1 = new String[5];
+                                mas1[0] = node3;
+                                mas1[1] = iface3;
+                                mas1[2] = node4;
+                                mas1[3] = iface4;
+                                mas1[4] = String.valueOf(j);
+                                remove_links_list.add(mas1);
+                                exclude_positions.put(j, j);
+                            }
+
+                        } else {
+                            if ((node1.equals(node3) && node2.equals(node4) && equalsIfaceName(iface1, iface3))
+                                    || (node1.equals(node4) && node2.equals(node3) && equalsIfaceName(iface1, iface4))
+                                    || (node1.equals(node3) && node2.equals(node4) && equalsIfaceName(iface2, iface4))
+                                    || (node1.equals(node4) && node2.equals(node3) && equalsIfaceName(iface2, iface3))) {
+                                String[] mas1 = new String[5];
+                                mas1[0] = node3;
+                                mas1[1] = iface3;
+                                mas1[2] = node4;
+                                mas1[3] = iface4;
+                                mas1[4] = String.valueOf(j);
+                                remove_links_list.add(mas1);
+                                exclude_positions.put(j, j);
+                            }
+
                         }
                     }
                 }
             }
+            if (remove_links_list.size() > 1) {
+                ArrayList<String[]> links_new = new ArrayList();
+                logger.Println("------------------------------------------------------------------------", logger.DEBUG);
+                for(String[] link : remove_links_list) {
+                    logger.Println("Dublicate: " + link[0] + " " + link[1] + " <---> " + link[2] + " " + link[3], logger.DEBUG);
+                    if(!link[3].equals("unknown")) {
+                        links_new.add(link);
+                    }
+                }
+                logger.Println("------------------------------------------------------------------------", logger.DEBUG);
+                if(links_new.isEmpty()) {
+                    remove_links_list.remove(0);
+                } else {
+                    int max_len = 0;
+                    int pos = 0;
+                    int ii = 0;
+                    for(String[] link1 : links_new) {
+                        if((link1[1]+";"+link1[3]).length() > max_len) {
+                            max_len = (link1[1]+";"+link1[3]).length();
+                            pos = ii;
+                        }
+                        ii++;
+                    }
+                    logger.Println("Main link: "+links_new.get(pos)[0]+" "+links_new.get(pos)[1]+" <---> "+links_new.get(pos)[2]+" "+links_new.get(pos)[3], logger.DEBUG);
+                    logger.Println("===================================================================", logger.DEBUG);
+                    links_new.remove(pos);
+                    remove_links_list = links_new;
+                }
+                remove_links_list_all.addAll(remove_links_list);
+            }
         }
+        class MaxToMinPosition implements Comparator {
+            public int compare(Object obj1, Object obj2) {
+                Integer pos1 = Integer.parseInt(((String[])obj1)[4]);
+                Integer pos2 = Integer.parseInt(((String[])obj2)[4]);
+                // Compare the objects
+                if (pos1 > pos2) return -1;
+                if (pos1 < pos2) return 1;
+                return 0;
+            }
+        }
+        Comparator maxToMinPosition = new MaxToMinPosition();
+
+        Collections.sort(remove_links_list_all, maxToMinPosition);
+        for(String[] link : remove_links_list_all) {
+            links.remove(Integer.parseInt(link[4]));
+        }
+
+//        for(int pos : position) {
+//            ArrayList<String> link = links.get(pos);
+//            if (link.size() == 5) {
+//                logger.Println("Remove Link: " + link.get(0) + " " + link.get(1) + " <---> " + link.get(2) + " " + link.get(3), logger.DEBUG);
+//            } else {
+//                logger.Println("Remove Link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), logger.DEBUG);
+//            }
+//            links.remove(pos);
+//
+
         return links;
     }
 
     private ArrayList<String[]> removeDuplicateMacIpPort(ArrayList<String[]> mac_ip_port) {
         // remove duplicate mac ip port
         Map<String, String[]> map_mip = new HashMap();
-        for(String[] mip : mac_ip_port) {
-            if(map_mip.get(mip[0]+"|"+mip[1]) == null) {
-                map_mip.put(mip[0]+"|"+mip[1], mip);
+        for (String[] mip : mac_ip_port) {
+            if (map_mip.get(mip[0] + "|" + mip[1]) == null) {
+                map_mip.put(mip[0] + "|" + mip[1], mip);
             } else {
-                logger.Println("Remove duplicate mac_ip_port: "+mip[0]+", "+mip[1]+" - "+mip[2]+", "+mip[3]+", "+mip[4], logger.DEBUG);
+                logger.Println("Remove duplicate mac_ip_port: " + mip[0] + ", " + mip[1] + " - " + mip[2] + ", " + mip[3] + ", " + mip[4], logger.DEBUG);
             }
         }
 
         ArrayList<String[]> mac_ip_port_uniqal = new ArrayList();
-        for (Map.Entry<String, String[]> entry :  map_mip.entrySet()) {
+        for (Map.Entry<String, String[]> entry : map_mip.entrySet()) {
             String[] val = entry.getValue();
             mac_ip_port_uniqal.add(val);
         }
-        
+
         return mac_ip_port_uniqal;
-    }    
-    
+    }
+
     public boolean authDC(String username, String password, String serverName, String domainName) {
         @SuppressWarnings("unused")
         LdapContext ctx = null;
@@ -13281,7 +13415,7 @@ public class Utils {
     }
 
     public Map<String, ArrayList<String>> differentNodeNeightbors(Map<String, Map<String, Map<String, String>>> area_node_neighbors_old,
-            Map<String, Map<String, Map<String, String>>> area_node_neighbors_new) {
+                                                                  Map<String, Map<String, Map<String, String>>> area_node_neighbors_new) {
         Map<String, ArrayList<String>> area_node = new HashMap();
         for (Map.Entry<String, Map<String, Map<String, String>>> entry : area_node_neighbors_new.entrySet()) {
             String area = entry.getKey();
@@ -13333,8 +13467,8 @@ public class Utils {
     }
 
     private ArrayList getOneStepDiameter(ArrayList<String> node_list,
-            Map<String, String> nodes_exclude,
-            Map<String, ArrayList<String>> node_neightboards) {
+                                         Map<String, String> nodes_exclude,
+                                         Map<String, ArrayList<String>> node_neightboards) {
         ArrayList result = new ArrayList();
         ArrayList node_list_new = new ArrayList();
         for (String node : node_list) {
@@ -13520,10 +13654,10 @@ public class Utils {
                     tmp_map.put(str, node_vector.get(str));
                 }
             }
-            if(!tmp_map.isEmpty()) {
+            if (!tmp_map.isEmpty()) {
                 double[] center = getCenter(tmp_map);
-    //                Map<String, double[]> tmp_map_center = new HashMap();
-    //                tmp_map_center.put("center", center);
+                //                Map<String, double[]> tmp_map_center = new HashMap();
+                //                tmp_map_center.put("center", center);
                 tmp_list.add(center);
                 group_image_cluster_vector.put(group_image, tmp_list);
             }
@@ -13607,7 +13741,7 @@ public class Utils {
         return undefined_group_list;
     }
 
-//    private Map<String, ArrayList<Map<String, double[]>>> clustering_from_image_groups(Map<String, Map<String, double[]>> groups_node_vector) {
+    //    private Map<String, ArrayList<Map<String, double[]>>> clustering_from_image_groups(Map<String, Map<String, double[]>> groups_node_vector) {
 //        Map<String, ArrayList<Map<String, double[]>>> group_image_claster = new HashMap();
 //        for(Map.Entry<String, Map<String, double[]>> entry : groups_node_vector.entrySet()) {
 //            String group_image = entry.getKey();
@@ -13685,7 +13819,7 @@ public class Utils {
         return result;
     }
 
-//    private double getMaxDistance(double[] vector, Map<String, double[]> node_vector) {  
+    //    private double getMaxDistance(double[] vector, Map<String, double[]> node_vector) {
 //        double distance_max = 0;
 //        for(Map.Entry<String, double[]> entry : node_vector.entrySet()) {
 //            String key = entry.getKey();
@@ -14068,12 +14202,12 @@ public class Utils {
 
             // delete mac_ip_port from node
             ArrayList<String[]> mip_delete = new ArrayList();
-            if (INFO.get(area) != null && ((Map) INFO.get(area)).get("mac_ip_port") != null && 
-                    !((ArrayList)((Map) INFO.get(area)).get("mac_ip_port")).isEmpty()) {
+            if (INFO.get(area) != null && ((Map) INFO.get(area)).get("mac_ip_port") != null &&
+                    !((ArrayList) ((Map) INFO.get(area)).get("mac_ip_port")).isEmpty()) {
 
                 if (((ArrayList) ((Map) INFO.get(area)).get("mac_ip_port")).get(0) instanceof String[]) {
                     for (String[] mip : (ArrayList<String[]>) ((Map) INFO.get(area)).get("mac_ip_port")) {
-                        if(mip.length >= 5 && mip[0] != null && mip[1] != null && mip[2] != null && mip[3] != null && mip[4] != null) {
+                        if (mip.length >= 5 && mip[0] != null && mip[1] != null && mip[2] != null && mip[3] != null && mip[4] != null) {
                             if (mip[2].equals(node)) {
                                 logger.Println("Delete mac_ip_port: " + mip[0] + ", " + mip[1] + ", " + mip[2] + ", " + mip[3] + ", " + mip[4], logger.DEBUG);
                                 mip_delete.add(mip);
@@ -14100,7 +14234,7 @@ public class Utils {
                 ArrayList<String[]> mip_new = new ArrayList();
                 if (((ArrayList) ((Map) INFO.get(area)).get("mac_ip_port")).get(0) instanceof String[]) {
                     for (String[] mip : (ArrayList<String[]>) ((Map) INFO.get(area)).get("mac_ip_port")) {
-                        if(mip.length >= 5 && mip[0] != null && mip[1] != null && mip[2] != null && mip[3] != null && mip[4] != null) {
+                        if (mip.length >= 5 && mip[0] != null && mip[1] != null && mip[2] != null && mip[3] != null && mip[4] != null) {
                             boolean found = false;
                             for (String[] mip_del : mip_delete) {
                                 if (mip[0].equals(mip_del[0])
@@ -14478,13 +14612,13 @@ public class Utils {
             return hex;
         }
     }
-    
+
     public Map<String, Map> transform_node_protocol_accounts(Map<String, Map> INFO) {
         for (Map.Entry<String, Map> entry : INFO.entrySet()) {
 //            String area = entry.getKey();
             Map<String, Map> val = entry.getValue();
             Map<String, String[]> node_protocol_accounts = val.get("node_protocol_accounts");
-            if(node_protocol_accounts != null && !node_protocol_accounts.isEmpty()) {
+            if (node_protocol_accounts != null && !node_protocol_accounts.isEmpty()) {
                 Map<String, ArrayList<String[]>> node_protocol_accounts_new = new HashMap();
                 for (Map.Entry<String, String[]> entry1 : node_protocol_accounts.entrySet()) {
                     String node = entry1.getKey();
@@ -14495,12 +14629,12 @@ public class Utils {
                 }
                 val.put("node_protocol_accounts", node_protocol_accounts_new);
             }
-            
+
         }
-        
+
         return INFO;
     }
-    
+
     public Map<String, String> get_Mac_Ip(Map<String, Map> informationFromNodesAllAreas) {
         Map<String, ArrayList<String>> area_networks = new HashMap();
         Map<String, Map> areas = (Map<String, Map>) Neb.cfg.get("areas");
@@ -14508,8 +14642,8 @@ public class Utils {
             for (Map.Entry<String, Map> entry : areas.entrySet()) {
                 String area = entry.getKey();
                 Map val = entry.getValue();
-                ArrayList<String> networks = (ArrayList<String>)val.get("networks");
-                if(networks != null && !networks.isEmpty())
+                ArrayList<String> networks = (ArrayList<String>) val.get("networks");
+                if (networks != null && !networks.isEmpty())
                     area_networks.put(area, networks);
             }
         }
@@ -14522,50 +14656,50 @@ public class Utils {
             Map<String, Map> nodes_information = (Map<String, Map>) val.get("nodes_information");
             if (nodes_information != null) {
                 for (Map.Entry<String, Map> entry : nodes_information.entrySet()) {
-//                    String node = entry.getKey();
+                    String node = entry.getKey();
                     Map<String, Map> node_information = entry.getValue();
                     ArrayList<String> ip_list = utils.getIpListFromNode(node_information);
                     ArrayList<String> mac_list = utils.getMACFromNode(node_information);
                     ArrayList<String> mac_list_new = new ArrayList();
-                    for(String mac : mac_list) {
+                    for (String mac : mac_list) {
                         mac_list_new.add(mac.replaceAll("[:.-]", "").toLowerCase());
                     }
                     mac_list = mac_list_new;
-                    ArrayList<BigInteger> l = new ArrayList();
-                    for(String mac : mac_list) {
-                        BigInteger num = new BigInteger(mac, 16);
-                        l.add(num);
-                    }
+//                    ArrayList<BigInteger> l = new ArrayList();
+//                    for(String mac : mac_list) {
+//                        BigInteger num = new BigInteger(mac, 16);
+//                        l.add(num);
+//                    }
+//
+//                    if(!l.isEmpty()) {
+//                        BigInteger min = new BigInteger("ffffffffffff", 16);
+//                        for(BigInteger it : l) {
+//                            if(it.compareTo(min) == -1)
+//                                min = it;
+//                        }
+//                        min = min.subtract(BigInteger.valueOf(1));
+//                        String new_mac = min.toString(16);
+//                        StringBuilder prefix = new StringBuilder();
+//                        prefix.append("0".repeat(Math.max(0, 12 - new_mac.length())));
+//                        new_mac = prefix+new_mac;
+//                        mac_list.add(new_mac);
+//                        String new_mac2 = new_mac.substring(0, new_mac.length()-2);
+//                        mac_list.add(new_mac2+"00");
+//                    }
 
-                    if(!l.isEmpty()) {
-                        BigInteger min = new BigInteger("ffffffffffff", 16);
-                        for(BigInteger it : l) {
-                            if(it.compareTo(min) == -1) 
-                                min = it;
-                        }
-                        min = min.subtract(BigInteger.valueOf(1));
-                        String new_mac = min.toString(16);
-                        StringBuilder prefix = new StringBuilder();
-                        prefix.append("0".repeat(Math.max(0, 12 - new_mac.length())));
-                        new_mac = prefix+new_mac;
-                        mac_list.add(new_mac);
-                        String new_mac2 = new_mac.substring(0, new_mac.length()-2);
-                        mac_list.add(new_mac2+"00");
-                    }
-
-                    if(!ip_list.isEmpty() && !mac_list.isEmpty()) {
-                        for(String mac : mac_list) {
+                    if (!ip_list.isEmpty() && !mac_list.isEmpty()) {
+                        for (String mac : mac_list) {
                             ArrayList<String> networks = area_networks.get(area_name);
-                            if(networks != null) {
-                                for(String net : networks) {
+                            if (networks != null) {
+                                for (String net : networks) {
                                     String ip_find = null;
-                                    for(String ip : ip_list) {
-                                        if(utils.inside_Network(ip, net)) {
+                                    for (String ip : ip_list) {
+                                        if (utils.inside_Network(ip, net)) {
                                             ip_find = ip;
                                             break;
                                         }
                                     }
-                                    if(ip_find != null) {
+                                    if (ip_find != null) {
                                         mac_ip.put(mac, ip_find);
                                     } else {
                                         mac_ip.put(mac, ip_list.get(0));
@@ -14583,7 +14717,7 @@ public class Utils {
         }
         return mac_ip;
     }
-    
+
     public Map<String, Map<String, String>> get_Area_Ip_Mac(Map<String, Map> informationFromNodesAllAreas) {
         Map<String, Map<String, String>> area_ip_mac = new HashMap();
         for (Map.Entry<String, Map> area : informationFromNodesAllAreas.entrySet()) {
@@ -14595,12 +14729,12 @@ public class Utils {
 //                    String node = entry.getKey();
                     Map<String, Map> node_information = entry.getValue();
                     Map<String, String> ip_mac = utils.getIpMACFromNode(node_information);
-                    if(area_ip_mac.get(area_name) != null) {
+                    if (area_ip_mac.get(area_name) != null) {
                         area_ip_mac.get(area_name).putAll(ip_mac);
                     } else {
                         area_ip_mac.put(area_name, ip_mac);
                     }
-   
+
                 }
             }
         }
@@ -14619,7 +14753,7 @@ public class Utils {
                     String node = entry.getKey();
                     Map<String, Map> node_information = entry.getValue();
                     Map<String, String> ip_mac = utils.getIpMACFromNode(node_information);
-                    if(ip_mac != null && !ip_mac.isEmpty()) {
+                    if (ip_mac != null && !ip_mac.isEmpty()) {
                         if (node_ip_mac.get(node) != null) {
                             node_ip_mac.get(node).putAll(ip_mac);
                         } else {
@@ -14635,18 +14769,18 @@ public class Utils {
 
     public Map<String, ArrayList<String[]>> get_Mac_retry_scanning(ArrayList<ArrayList> node_community_version_oid_list) {
         Map<String, ArrayList<String[]>> result = new HashMap();
-        
+
         WalkPool walkPool = new WalkPool();
         int iter = 1;
-        while(true) {
+        while (true) {
             Map<String, ArrayList<String[]>> res = walkPool.getNodeMultiCommunityVersionOidNotBulk(node_community_version_oid_list, Neb.timeout_thread_mac, 161, Neb.timeout_mac_retry, Neb.retries_mac);
-            logger.Println("###### Iter = "+ iter, logger.DEBUG);
-            logger.Println("------ Size = "+ res.size(), logger.DEBUG);
-            if(res.isEmpty()) break;
+            logger.Println("###### Iter = " + iter, logger.DEBUG);
+            logger.Println("------ Size = " + res.size(), logger.DEBUG);
+            if (res.isEmpty()) break;
             ArrayList<ArrayList> node_community_version_oid_list_new = new ArrayList();
-            for(ArrayList it : node_community_version_oid_list) {
-                String node = (String)it.get(0);
-                if(res.get(node) == null) {
+            for (ArrayList it : node_community_version_oid_list) {
+                String node = (String) it.get(0);
+                if (res.get(node) == null) {
                     node_community_version_oid_list_new.add(it);
 //                    logger.Println("\tNot MAC address node - "+node, logger.DEBUG);
                 }
@@ -14658,19 +14792,19 @@ public class Utils {
 
         return result;
     }
-    
+
     private void applyInfo(Map area_info, ArrayList<String[]> replace_nodes) {
         Map<String, Map> nodes_info = (Map<String, Map>) area_info.get("nodes_information");
-        if (nodes_info != null) {        
+        if (nodes_info != null) {
             // replace and remove duplicate nodes
             for (String[] replace_node : replace_nodes) {
                 Map<String, Map> node_info = nodes_info.get(replace_node[0]);
                 Map<String, Map> node_info1 = nodes_info.get(replace_node[1]);
                 if (replace_node[1] != null) {
                     nodes_info.remove(replace_node[0]);
-                    if (node_info1 != null) {
+                    if (node_info1 != null && nodes_info.get(replace_node[1]) == null) {
                         nodes_info.put(replace_node[1], node_info1);
-                    } else if (node_info != null) {
+                    } else if (node_info != null && nodes_info.get(replace_node[1]) == null) {
                         nodes_info.put(replace_node[1], node_info);
                     }
                     logger.Println("Replace node: " + replace_node[0] + " to: " + replace_node[1], logger.DEBUG);
@@ -14684,50 +14818,69 @@ public class Utils {
             ArrayList<ArrayList<String>> links = (ArrayList<ArrayList<String>>) area_info.get("links");
             ArrayList<ArrayList<String>> links_new = new ArrayList();
             for (ArrayList<String> link : links) {
-                String node1 = link.get(0);
-                String node2 = link.get(3);
-                String replace1 = null;
-                String replace2 = null;
-                boolean remove_link = false;
-                for (String[] replace_node : replace_nodes) {
-                    if (replace_node[0].equals(node1)) {
-                        if (replace_node[1] != null) {
-                            replace1 = replace_node[1];
-                        } else {
-                            remove_link = true;
-                        }
-                        break;
-                    }
-
-                }
-                for (String[] replace_node : replace_nodes) {
-                    if (replace_node[0].equals(node2)) {
-                        if (replace_node[1] != null) {
-                            replace2 = replace_node[1];
-                        } else {
-                            remove_link = true;
-                        }
-                        break;
-                    }
-                }
-
-                if (!remove_link) {
-                    String node1_prev = link.get(0);
-                    String node2_prev = link.get(3);
-                    if (replace1 != null || replace2 != null) {
-                        logger.Println("Replace link: " + node1_prev + " " + link.get(2) + " <---> " + node2_prev + " " + link.get(5) + "   to:   " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), logger.DEBUG);
-                    }                    
-                    if (replace1 != null) {
-                        link.set(0, replace1);
-                    }
-                    if (replace2 != null) {
-                        link.set(3, replace2);
-                    }
-                    links_new.add(link);
+                String node1 = null;
+                String node2 = null;
+                if (link.size() == 5) {
+                    node1 = link.get(0);
+                    node2 = link.get(2);
                 } else {
-                    logger.Println("Remove link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), logger.DEBUG);
+                    node1 = link.get(0);
+                    node2 = link.get(3);
                 }
+                if (node1 != null && node2 != null) {
+                    String replace1 = null;
+                    String replace2 = null;
+                    boolean remove_link = false;
+                    for (String[] replace_node : replace_nodes) {
+                        if (replace_node[0].equals(node1)) {
+                            if (replace_node[1] != null) {
+                                replace1 = replace_node[1];
+                            } else {
+                                remove_link = true;
+                            }
+                            break;
+                        }
 
+                    }
+                    for (String[] replace_node : replace_nodes) {
+                        if (replace_node[0].equals(node2)) {
+                            if (replace_node[1] != null) {
+                                replace2 = replace_node[1];
+                            } else {
+                                remove_link = true;
+                            }
+                            break;
+                        }
+                    }
+
+                    if (!remove_link) {
+                        if (replace1 != null) {
+                            if (link.size() == 5) {
+                                logger.Println("Replace link: " + link.get(0) + " " + link.get(1) + " <---> " + link.get(2) + " " + link.get(3) + "   to:   " + replace1 + " " + link.get(1) + " <---> " + link.get(2) + " " + link.get(3), logger.DEBUG);
+                                link.set(0, replace1);
+                            } else {
+                                logger.Println("Replace link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + "   to:   " + replace1 + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), logger.DEBUG);
+                                link.set(0, replace1);
+                            }
+                        }
+                        if (replace2 != null) {
+                            if (link.size() == 5) {
+                                logger.Println("Replace link: " + link.get(0) + " " + link.get(1) + " <---> " + link.get(2) + " " + link.get(3) + "   to:   " + link.get(0) + " " + link.get(1) + " <---> " + replace2 + " " + link.get(3), logger.DEBUG);
+                                link.set(3, replace2);
+                            } else {
+                                logger.Println("Replace link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + "   to:   " + link.get(0) + " " + link.get(2) + " <---> " + replace2 + " " + link.get(5), logger.DEBUG);
+                                link.set(3, replace2);
+                            }
+                        }
+                        links_new.add(link);
+                    } else {
+                        if (link.size() == 5) {
+                            logger.Println("Remove link: " + link.get(0) + " " + link.get(1) + " <---> " + link.get(2) + " " + link.get(3), logger.DEBUG);
+                        } else {
+                            logger.Println("Remove link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), logger.DEBUG);
+                        }
+                    }
+                }
             }
             links = links_new;
 
@@ -14737,12 +14890,25 @@ public class Utils {
             // clear link. Remove link if node not exist.
             ArrayList<ArrayList<String>> links_new1 = new ArrayList();
             for (ArrayList<String> link : links) {
-                String node1 = link.get(0);
-                String node2 = link.get(3);
-                if (nodes_info.get(node1) != null && nodes_info.get(node2) != null) {
-                    links_new1.add(link);
+                String node1 = null;
+                String node2 = null;
+                if (link.size() == 5) {
+                    node1 = link.get(0);
+                    node2 = link.get(2);
                 } else {
-                    logger.Println("Remove Link(not exist node): " + node1 + " " + link.get(2) + " <---> " + node2 + " " + link.get(5), logger.DEBUG);
+                    node1 = link.get(0);
+                    node2 = link.get(3);
+                }
+                if (node1 != null && node2 != null) {
+                    if (nodes_info.get(node1) != null && nodes_info.get(node2) != null) {
+                        links_new1.add(link);
+                    } else {
+                        if (link.size() == 5) {
+                            logger.Println("Remove Link(not exist node): " + node1 + " " + link.get(1) + " <---> " + node2 + " " + link.get(3), logger.DEBUG);
+                        } else {
+                            logger.Println("Remove Link(not exist node): " + node1 + " " + link.get(2) + " <---> " + node2 + " " + link.get(5), logger.DEBUG);
+                        }
+                    }
                 }
             }
             links = links_new1;
@@ -14788,148 +14954,219 @@ public class Utils {
             }
             mac_ip_port = mac_ip_port_new1;
 
-            area_info.put("nodes_information", nodes_info);
-            area_info.put("links", links);
-            area_info.put("mac_ip_port", mac_ip_port);
+            if (nodes_info != null && !nodes_info.isEmpty()) {
+                area_info.put("nodes_information", nodes_info);
+            }
+            if (links != null && !links.isEmpty()) {
+                area_info.put("links", links);
+            }
+            if (mac_ip_port != null && !mac_ip_port.isEmpty()) {
+                area_info.put("mac_ip_port", mac_ip_port);
+            }
         }
 
     }
-    
-    private void applyInfo_RemoveDubleNodes(Map area_info, ArrayList<String[]> replace_nodes) {
-        Map<String, Map> nodes_info = (Map<String, Map>) area_info.get("nodes_information");
-        if (nodes_info != null && !replace_nodes.isEmpty()) { 
-            
-            // remove duplicate nodes
-            for (String[] replace_node : replace_nodes) {
-                nodes_info.remove(replace_node[0]);
-                logger.Println("Remove duplicate node: " + replace_node[0], logger.DEBUG);
-            }
-            
 
-            // Adding links from duble nodes to main node
-            ArrayList<ArrayList<String>> links = (ArrayList<ArrayList<String>>) area_info.get("links");
-            for (ArrayList<String> link : links) {
-                String node1 = link.get(0);
-                String node2 = link.get(3);
-                for (String[] replace_node : replace_nodes) {
-                    if (replace_node[0].equals(node1)) {
-                        logger.Println("Replace link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + "   to:   " + replace_node[1] + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), logger.DEBUG);
-                        link.set(0, replace_node[1]);
-                        break;
+//    private void applyInfo_RemoveDubleNodes(Map area_info, ArrayList<String[]> replace_nodes) {
+//        Map<String, Map> nodes_info = (Map<String, Map>) area_info.get("nodes_information");
+//        if (nodes_info != null && !replace_nodes.isEmpty()) {
+//
+//            // remove duplicate nodes
+//            for (String[] replace_node : replace_nodes) {
+//                nodes_info.remove(replace_node[0]);
+//                logger.Println("Remove duplicate node: " + replace_node[0], logger.DEBUG);
+//            }
+//
+//
+//            // Adding links from duble nodes to main node
+//            ArrayList<ArrayList<String>> links = (ArrayList<ArrayList<String>>) area_info.get("links");
+//            for (ArrayList<String> link : links) {
+//                String node1 = link.get(0);
+//                String node2 = link.get(3);
+//                for (String[] replace_node : replace_nodes) {
+//                    if (replace_node[0].equals(node1)) {
+//                        logger.Println("Replace link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + "   to:   " + replace_node[1] + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), logger.DEBUG);
+//                        link.set(0, replace_node[1]);
+//                        break;
+//                    }
+//
+//                }
+//                for (String[] replace_node : replace_nodes) {
+//                    if (replace_node[0].equals(node2)) {
+//                        logger.Println("Replace link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + "   to:   " + link.get(0) + " " + link.get(2) + " <---> " + replace_node[1] + " " + link.get(5), logger.DEBUG);
+//                        link.set(3, replace_node[1]);
+//                        break;
+//                    }
+//
+//                }
+//            }
+//
+//            // remove duplicate links
+//            links = removeDuplicateLinks(links);
+//
+//            // clear link. Remove link if node not exist.
+//            ArrayList<ArrayList<String>> links_new1 = new ArrayList();
+//            for (ArrayList<String> link : links) {
+//                String node1 = link.get(0);
+//                String node2 = link.get(3);
+//                if (nodes_info.get(node1) != null && nodes_info.get(node2) != null) {
+//                    links_new1.add(link);
+//                } else {
+//                    logger.Println("Remove Link(not exist node): " + node1 + " " + link.get(2) + " <---> " + node2 + " " + link.get(5), logger.DEBUG);
+//                }
+//            }
+//            links = links_new1;
+//
+//            // replace mac_ip_port from replace_nodes
+//            ArrayList<String[]> mac_ip_port = (ArrayList<String[]>) area_info.get("mac_ip_port");
+//            if (mac_ip_port != null) {
+//                for (String[] it : mac_ip_port) {
+//                    String node = it[2];
+//                    for (String[] replace_node : replace_nodes) {
+//                        if (replace_node[0].equals(node)) {
+//                            it[2] = replace_node[1];
+//                            logger.Println("Replace mac_ip_port: " + node + "   to:   " + it[2], logger.DEBUG);
+//                        }
+//                    }
+//                }
+//            }
+//
+//            // delete client if ip addres equals with node ip address
+//            if (mac_ip_port != null) {
+//                ArrayList<String[]> mac_ip_port_new1 = new ArrayList();
+//                for (String[] it : mac_ip_port) {
+//                    if (!it[1].equals(it[2])) {
+//                        mac_ip_port_new1.add(it);
+//                    } else {
+//                        logger.Println("Remove mac_ip_port: " + it[0] + "," + it[1] + "," + it[2] + "," + it[3] + "," + it[4], logger.DEBUG);
+//                    }
+//                }
+//                mac_ip_port = mac_ip_port_new1;
+//                mac_ip_port = removeDuplicateMacIpPort(mac_ip_port);
+//            }
+//
+//            area_info.put("nodes_information", nodes_info);
+//            area_info.put("links", links);
+//            area_info.put("mac_ip_port", mac_ip_port);
+//        }
+//    }
+
+    public Map<String, Map> getArea_Node_NodePriority(Map<String, Map> Info, Map<String, ArrayList<String>> area_networks) {
+        Map<String, Map> area_Node_NodePriority = new HashMap();
+        for (Map.Entry<String, Map> entry : Info.entrySet()) {
+            String area_name = entry.getKey();
+            Map area_info = entry.getValue();
+            Map<String, String> node_NodePriority = new HashMap();
+            Map<String, Map> nodes_information = (Map<String, Map>) area_info.get("nodes_information");
+            if (nodes_information != null) {
+                Map<String, Integer> node_priority = new HashMap();
+                for (Map.Entry<String, Map> entry1 : nodes_information.entrySet()) {
+                    String node = entry1.getKey();
+                    Map node_information = entry1.getValue();
+                    ArrayList<String> ip_list = getIpListFromNode(node_information);
+                    if (ip_list != null && !ip_list.isEmpty()) {
+                        String main_node = node;
+                        ArrayList<String> networks = area_networks.get(area_name);
+                        if (networks != null) {
+                            int pos_min = Integer.MAX_VALUE;
+                            for (String ip : ip_list) {
+                                int pos = 0;
+                                boolean found = false;
+                                for (String network : networks) {
+                                    if (inside_Network(ip, network)) {
+                                        found = true;
+                                        break;
+                                    }
+                                    pos = pos + 1;
+                                }
+                                if (found) {
+                                    if (pos < pos_min) {
+                                        main_node = ip;
+                                        pos_min = pos;
+                                    }
+                                }
+                            }
+                        }
+                        node_NodePriority.put(node, main_node);
                     }
-
                 }
-                for (String[] replace_node : replace_nodes) {
-                    if (replace_node[0].equals(node2)) {
-                        logger.Println("Replace link: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5) + "   to:   " + link.get(0) + " " + link.get(2) + " <---> " + replace_node[1] + " " + link.get(5), logger.DEBUG);
-                        link.set(3, replace_node[1]);
-                        break;
+            }
+            area_Node_NodePriority.put(area_name, node_NodePriority);
+        }
+        return area_Node_NodePriority;
+    }
+
+    public String getPriorityNode(ArrayList<String> nodes_list, Map<String, Map> nodes_info, Map<String, String> node_NodePriority) {
+        String main_node = null;
+
+        if (!nodes_list.isEmpty()) {
+            main_node = nodes_list.get(0);
+            boolean find = false;
+            for (String node : nodes_list) {
+                if (node_NodePriority != null && node_NodePriority.get(node) != null) {
+                    main_node = node_NodePriority.get(node);
+                    find = true;
+                    break;
+                }
+
+            }
+            if (!find) {
+                ArrayList<String> nodes_list_new = new ArrayList();
+                for (String node : nodes_list) {
+                    if(node.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
+                        nodes_list_new.add(node);
                     }
-
                 }
-            }
-
-            // remove duplicate links
-            links = removeDuplicateLinks(links);
-
-            // clear link. Remove link if node not exist.
-            ArrayList<ArrayList<String>> links_new1 = new ArrayList();
-            for (ArrayList<String> link : links) {
-                String node1 = link.get(0);
-                String node2 = link.get(3);
-                if (nodes_info.get(node1) != null && nodes_info.get(node2) != null) {
-                    links_new1.add(link);
-                } else {
-                    logger.Println("Remove Link(not exist node): " + node1 + " " + link.get(2) + " <---> " + node2 + " " + link.get(5), logger.DEBUG);
+                if(!nodes_list_new.isEmpty()) {
+                    nodes_list = nodes_list_new;
                 }
-            }
-            links = links_new1;
 
-            // replace mac_ip_port from replace_nodes
-            ArrayList<String[]> mac_ip_port = (ArrayList<String[]>) area_info.get("mac_ip_port");
-            if (mac_ip_port != null) {
-                for (String[] it : mac_ip_port) {
-                    String node = it[2];
-                    for (String[] replace_node : replace_nodes) {
-                        if (replace_node[0].equals(node)) {
-                            it[2] = replace_node[1];
-                            logger.Println("Replace mac_ip_port: " + node + "   to:   " + it[2], logger.DEBUG);
+                int max_info = 0;
+                for (String node : nodes_list) {
+                    Map node_info = nodes_info.get(node);
+                    if (node_info != null) {
+                        Gson gson = new Gson();
+                        String str = gson.toJson(node_info);
+                        if (str.length() > max_info) {
+                            max_info = str.length();
+                            main_node = node;
                         }
                     }
                 }
             }
-
-            // delete client if ip addres equals with node ip address
-            if (mac_ip_port != null) {
-                ArrayList<String[]> mac_ip_port_new1 = new ArrayList();
-                for (String[] it : mac_ip_port) {
-                    if (!it[1].equals(it[2])) {
-                        mac_ip_port_new1.add(it);
-                    } else {
-                        logger.Println("Remove mac_ip_port: " + it[0] + "," + it[1] + "," + it[2] + "," + it[3] + "," + it[4], logger.DEBUG);
-                    }
-                }
-                mac_ip_port = mac_ip_port_new1;
-                mac_ip_port = removeDuplicateMacIpPort(mac_ip_port);
-            }
-
-            area_info.put("nodes_information", nodes_info);
-            area_info.put("links", links);
-            area_info.put("mac_ip_port", mac_ip_port);
         }
-    }    
-    
-    private String choiceMaxInformationNode(ArrayList<String> nodes_list, Map<String, Map> nodes_info) {
-        int max_info = 0;
-        String max_node = "";
-        for(String node : nodes_list) {
-            if (node.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
-                return node;
-            }
-        }
-        for(String node : nodes_list) {
-            Map node_info = nodes_info.get(node);
-            if(node_info != null) {
-                Gson gson = new Gson();
-                String str = gson.toJson(node_info);
-                if(str.length() > max_info) {
-                    max_info = str.length();
-                    max_node = node;
-                }
-            }
-        }
-        return max_node;
+        return main_node;
     }
-    
+
     public Map getTopology(Map<String, Map> Info) {
         Map<String, Map> result = new HashMap();
-        for(Map.Entry<String, Map> entry0 : Info.entrySet()) {
+        for (Map.Entry<String, Map> entry0 : Info.entrySet()) {
             String area = entry0.getKey();
             Map val = entry0.getValue();
-            
+
             Map<String, ArrayList> res = new HashMap();
-            Map<String, Map> nodes_information = (Map)val.get("nodes_information");
-            ArrayList<ArrayList<String>> links = (ArrayList)val.get("links");
-            if(nodes_information != null && !nodes_information.isEmpty()) {
-                for(Map.Entry<String, Map> entry : nodes_information.entrySet()) {
+            Map<String, Map> nodes_information = (Map) val.get("nodes_information");
+            ArrayList<ArrayList<String>> links = (ArrayList) val.get("links");
+            if (nodes_information != null && !nodes_information.isEmpty()) {
+                for (Map.Entry<String, Map> entry : nodes_information.entrySet()) {
                     String node = entry.getKey();
                     ArrayList<String[]> neighbours = new ArrayList();
-                    if(links != null) {
-                        for(ArrayList<String> link : links) {
-                            if(link.get(0).equals(node)) {
+                    if (links != null) {
+                        for (ArrayList<String> link : links) {
+                            if (link.get(0).equals(node)) {
                                 String[] mas = new String[3];
                                 mas[0] = link.get(3);
                                 mas[1] = link.get(4);
                                 mas[2] = link.get(5);
                                 neighbours.add(mas);
                             }
-                            if(link.get(3).equals(node)) {
+                            if (link.get(3).equals(node)) {
                                 String[] mas = new String[3];
                                 mas[0] = link.get(0);
                                 mas[1] = link.get(1);
                                 mas[2] = link.get(2);
-                                neighbours.add(mas);                                
-                            }                        
+                                neighbours.add(mas);
+                            }
                         }
                     }
                     res.put(node, neighbours);
@@ -14937,24 +15174,24 @@ public class Utils {
             }
             result.put(area, res);
         }
-        
+
         return result;
     }
-    
+
     public Map getConnectedNeighboursMac(Map<String, Map> topology, Map<String, ArrayList<String[]>> area_arp_mac_table) {
         Map<String, Map> area_node_id_mac_list = new HashMap();
         for (Map.Entry<String, ArrayList<String[]>> entry : area_arp_mac_table.entrySet()) {
             String area = entry.getKey();
             ArrayList<String[]> val = entry.getValue();
             Map<String, Map<String, Map<String, String>>> node_id_mac = new HashMap();
-            for(String[] iter : val) {
+            for (String[] iter : val) {
                 String node = iter[0];
                 String id = iter[1];
 //                String iface = iter[2];
 //                String ip = iter[3];
                 String mac = iter[4].replace(":", "");
-                if(node_id_mac.get(node) != null) {
-                    if(node_id_mac.get(node).get(id) != null) {
+                if (node_id_mac.get(node) != null) {
+                    if (node_id_mac.get(node).get(id) != null) {
                         node_id_mac.get(node).get(id).put(mac, mac);
                     } else {
                         Map<String, String> map_tmp = new HashMap();
@@ -14963,35 +15200,35 @@ public class Utils {
                     }
                 } else {
                     Map<String, Map<String, String>> id_mac = new HashMap();
-                    if(id_mac.get(id) != null) {
+                    if (id_mac.get(id) != null) {
                         id_mac.get(id).put(mac, mac);
                     } else {
                         Map<String, String> map_tmp = new HashMap();
                         map_tmp.put(mac, mac);
-                        id_mac.put(id, map_tmp);                    
+                        id_mac.put(id, map_tmp);
                     }
                     node_id_mac.put(node, id_mac);
                 }
             }
             area_node_id_mac_list.put(area, node_id_mac);
-        } 
-        
+        }
+
         Map<String, Map> area_node_mac_connected_neighbours_mac = new HashMap();
         for (Map.Entry<String, Map> entry : topology.entrySet()) {
             String area = entry.getKey();
-            Map<String, ArrayList> val = (Map)entry.getValue();
+            Map<String, ArrayList> val = (Map) entry.getValue();
             Map<String, Map> node_mac_connected_neighbours_mac = new HashMap();
-            if(area_node_id_mac_list.get(area) != null) {
+            if (area_node_id_mac_list.get(area) != null) {
                 for (Map.Entry<String, ArrayList> entry1 : val.entrySet()) {
                     String node = entry1.getKey();
                     ArrayList<String[]> val1 = entry1.getValue();
                     Map<String, Map> mac_connected_neighbours_mac = new HashMap();
-                    if(area_node_id_mac_list.get(area).get(node) != null) {
+                    if (area_node_id_mac_list.get(area).get(node) != null) {
                         Map map_tmp = new HashMap((Map) area_node_id_mac_list.get(area).get(node));
-                        if(!map_tmp.isEmpty()) {
+                        if (!map_tmp.isEmpty()) {
                             mac_connected_neighbours_mac.put("connected", map_tmp);
                         }
-                    }            
+                    }
 
                     Map map_tmp = new HashMap();
                     for (String[] iter : val1) {
@@ -14999,46 +15236,46 @@ public class Utils {
                         String id_neighbours = iter[1];
                         String iface_neighbours = iter[2];
 
-                        if(!id_neighbours.isEmpty() && area_node_id_mac_list.get(area).get(node_neighbours) != null &&
-                            ((Map)area_node_id_mac_list.get(area).get(node_neighbours)).get(id_neighbours) != null) {
-                            map_tmp.put(node_neighbours, ((Map)area_node_id_mac_list.get(area).get(node_neighbours)).get(id_neighbours));
+                        if (!id_neighbours.isEmpty() && area_node_id_mac_list.get(area).get(node_neighbours) != null &&
+                                ((Map) area_node_id_mac_list.get(area).get(node_neighbours)).get(id_neighbours) != null) {
+                            map_tmp.put(node_neighbours, ((Map) area_node_id_mac_list.get(area).get(node_neighbours)).get(id_neighbours));
                         }
                     }
-                    if(!map_tmp.isEmpty()) {
+                    if (!map_tmp.isEmpty()) {
                         mac_connected_neighbours_mac.put("neighbours", map_tmp);
                     }
-                    if(!mac_connected_neighbours_mac.isEmpty()) {
+                    if (!mac_connected_neighbours_mac.isEmpty()) {
                         node_mac_connected_neighbours_mac.put(node, mac_connected_neighbours_mac);
                     }
                 }
             }
-            if(!node_mac_connected_neighbours_mac.isEmpty()) {
+            if (!node_mac_connected_neighbours_mac.isEmpty()) {
                 area_node_mac_connected_neighbours_mac.put(area, node_mac_connected_neighbours_mac);
             }
         }
         return area_node_mac_connected_neighbours_mac;
     }
-    
+
     public Map appendMacFromArpMacTable(Map<String, Map> INFO, Map<String, ArrayList<String[]>> area_arp_mac_table) {
         for (Map.Entry<String, Map> entry : INFO.entrySet()) {
             String area = entry.getKey();
             Map<String, Map> area_info = entry.getValue();
             Map<String, Map> nodes_information = area_info.get("nodes_information");
             Map<String, String> node_mac = new HashMap();
-            if(area_arp_mac_table.get(area) != null) {
-                for(String[] iter : area_arp_mac_table.get(area)) {
+            if (area_arp_mac_table.get(area) != null) {
+                for (String[] iter : area_arp_mac_table.get(area)) {
                     String ip = iter[3];
                     String mac = iter[4];
                     node_mac.put(ip, mac);
                 }
-            }            
-            if(nodes_information != null) {
+            }
+            if (nodes_information != null) {
                 for (Map.Entry<String, Map> entry1 : nodes_information.entrySet()) {
                     String node = entry1.getKey();
                     Map<String, Map> node_info = entry1.getValue();
-                    if(node_info.get("general") != null) {
-                        String base_address = (String)node_info.get("general").get("base_address");
-                        if(base_address == null) {
+                    if (node_info.get("general") != null) {
+                        String base_address = (String) node_info.get("general").get("base_address");
+                        if (base_address == null) {
                             String mac = node_mac.get(node);
                             node_info.get("general").put("base_address", mac);
                         }
@@ -15048,10 +15285,10 @@ public class Utils {
         }
         return INFO;
     }
-    
+
     public boolean check_Link_through_node_mac_connected_neighbours_mac(
-            ArrayList<String> link, 
-            Map<String, Map> node_mac_connected_neighbours_mac, 
+            ArrayList<String> link,
+            Map<String, Map> node_mac_connected_neighbours_mac,
             Map<String, ArrayList<String>> node_mac) {
 //        if(link.get(0).equals("10.13.14.1") && link.get(2).equals("ethernet1/4"))
 //            System.out.println("1111");
@@ -15059,63 +15296,63 @@ public class Utils {
         boolean find1 = false;
         boolean find2 = false;
         boolean is_mac1 = false;
-        boolean is_mac2 = false;        
-        if(mac_list != null) {
-            for(String mac : mac_list) {
+        boolean is_mac2 = false;
+        if (mac_list != null) {
+            for (String mac : mac_list) {
                 String node = link.get(3);
                 String id_iface = link.get(4);
-                if(node_mac_connected_neighbours_mac.get(node) != null)
+                if (node_mac_connected_neighbours_mac.get(node) != null)
                     is_mac1 = true;
-                if(find_mac_from_node_mac_connected_neighbours_mac(mac, link.get(0), node, id_iface, node_mac_connected_neighbours_mac)) {
+                if (find_mac_from_node_mac_connected_neighbours_mac(mac, link.get(0), node, id_iface, node_mac_connected_neighbours_mac)) {
                     find1 = true;
                 }
             }
         }
         mac_list = node_mac.get(link.get(3));
-        if(mac_list != null) {
-            for(String mac : mac_list) {
+        if (mac_list != null) {
+            for (String mac : mac_list) {
                 String node = link.get(0);
-                if(node_mac_connected_neighbours_mac.get(node) != null)
-                    is_mac2 = true;                
+                if (node_mac_connected_neighbours_mac.get(node) != null)
+                    is_mac2 = true;
                 String id_iface = link.get(1);
-                if(find_mac_from_node_mac_connected_neighbours_mac(mac, link.get(3), node, id_iface, node_mac_connected_neighbours_mac)) {
+                if (find_mac_from_node_mac_connected_neighbours_mac(mac, link.get(3), node, id_iface, node_mac_connected_neighbours_mac)) {
                     find2 = true;
                 }
             }
         }
-        if(find1 && find2)
+        if (find1 && find2)
             return true;
-        else if((!find1 && !is_mac1) && find2)
+        else if ((!find1 && !is_mac1) && find2)
             return true;
         else return find1 && (!find2 && !is_mac2);
     }
-    
+
     private boolean find_mac_from_node_mac_connected_neighbours_mac(String mac, String owner_mac,
-            String node, String id_iface, 
-            Map<String, Map> node_mac_connected_neighbours_mac) {
-        if(node_mac_connected_neighbours_mac.get(node) != null) {
+                                                                    String node, String id_iface,
+                                                                    Map<String, Map> node_mac_connected_neighbours_mac) {
+        if (node_mac_connected_neighbours_mac.get(node) != null) {
             Map<String, Map> val = node_mac_connected_neighbours_mac.get(node);
             Map<String, Map> connected = val.get("connected");
             Map<String, Map> neighbours = val.get("neighbours");
-            if(connected == null && neighbours == null) {
+            if (connected == null && neighbours == null) {
                 return true;
             }
-            if(connected != null) {
+            if (connected != null) {
 //                if(connected.get(id_iface) == null) {
 //                    return true;
 //                }
-                if(connected.get(id_iface) != null && connected.get(id_iface).get(mac) != null) {
+                if (connected.get(id_iface) != null && connected.get(id_iface).get(mac) != null) {
                     return true;
                 }
             }
-            if(neighbours != null) {
+            if (neighbours != null) {
                 for (Map.Entry<String, Map> entry : neighbours.entrySet()) {
                     String node_neighbours = entry.getKey();
                     Map<String, String> val1 = entry.getValue();
-                    if(neighbours.size() == 1 && owner_mac.equals(node_neighbours)) {
+                    if (neighbours.size() == 1 && owner_mac.equals(node_neighbours)) {
                         return true;
                     } else {
-                        if(val1.get(mac) != null) {
+                        if (val1.get(mac) != null) {
                             return true;
                         }
                     }
@@ -15126,23 +15363,23 @@ public class Utils {
         }
         return false;
     }
-    
+
     public Map<String, Map> getAreaNodeMac(Map<String, Map> Info) {
         Map<String, Map> area_node_mac = new HashMap();
         for (Map.Entry<String, Map> entry : Info.entrySet()) {
             String area = entry.getKey();
             Map<String, Map> val = entry.getValue();
             Map<String, Map> nodes_information = val.get("nodes_information");
-            if(nodes_information != null) {
+            if (nodes_information != null) {
                 Map<String, ArrayList<String>> node_mac = new HashMap();
                 for (Map.Entry<String, Map> entry1 : nodes_information.entrySet()) {
                     String node = entry1.getKey();
                     Map<String, Map> node_info = entry1.getValue();
-                    if(node_info.get("general") != null && node_info.get("general").get("base_address") != null) {
-                        String mac = ((String)node_info.get("general").get("base_address")).replace(":", "");
-                        if(mac != null && !mac.isEmpty()) {
-                            if(node_mac.get(node) != null) {
-                                if(!node_mac.get(node).contains(mac)) {
+                    if (node_info.get("general") != null && node_info.get("general").get("base_address") != null) {
+                        String mac = ((String) node_info.get("general").get("base_address")).replace(":", "");
+                        if (mac != null && !mac.isEmpty()) {
+                            if (node_mac.get(node) != null) {
+                                if (!node_mac.get(node).contains(mac)) {
                                     node_mac.get(node).add(mac);
                                 }
                             } else {
@@ -15153,15 +15390,15 @@ public class Utils {
                         }
                     }
                     Map<String, Map> interfaces = node_info.get("interfaces");
-                    if(interfaces != null) {
+                    if (interfaces != null) {
                         for (Map.Entry<String, Map> entry2 : interfaces.entrySet()) {
 //                            String iface = entry2.getKey();
                             Map<String, String> iface_info = entry2.getValue();
-                            if(iface_info.get("mac") != null) {
+                            if (iface_info.get("mac") != null) {
                                 String mac = iface_info.get("mac").replace(":", "");
-                                if(mac != null && !mac.isEmpty() && !mac.equals("000000000000")) {
-                                    if(node_mac.get(node) != null) {
-                                        if(!node_mac.get(node).contains(mac)) {
+                                if (mac != null && !mac.isEmpty() && !mac.equals("000000000000")) {
+                                    if (node_mac.get(node) != null) {
+                                        if (!node_mac.get(node).contains(mac)) {
                                             node_mac.get(node).add(mac);
                                         }
                                     } else {
@@ -15180,7 +15417,7 @@ public class Utils {
         }
         return area_node_mac;
     }
-    
+
     public Map<String, Map> getAreaNodeIfaceVlans(Map<String, Map> Info, Map<String, Map<String, Map<String, String>>> area_node_ifaceid_ifacename) {
         Map<String, Map> area_node_ifacename_ifaceid = new HashMap();
         for (Map.Entry<String, Map<String, Map<String, String>>> entry : area_node_ifaceid_ifacename.entrySet()) {
@@ -15198,58 +15435,58 @@ public class Utils {
             }
             area_node_ifacename_ifaceid.put(area, node_ifacename_ifaceid);
         }
-        
+
         Map<String, Map> area_node_idiface_vlans = new HashMap();
         for (Map.Entry<String, Map> entry : Info.entrySet()) {
             String area = entry.getKey();
             Map<String, Map> val = entry.getValue();
             Map<String, Map> nodes_information = val.get("nodes_information");
-            if(nodes_information != null) {
+            if (nodes_information != null) {
                 Map<String, Map> node_idiface_vlans = new HashMap();
                 for (Map.Entry<String, Map> entry1 : nodes_information.entrySet()) {
                     String node = entry1.getKey();
-                    Map<String, Map> interfaces = (Map)entry1.getValue().get("interfaces");
-                    if(interfaces != null) {
+                    Map<String, Map> interfaces = (Map) entry1.getValue().get("interfaces");
+                    if (interfaces != null) {
                         Map<String, ArrayList> idiface_vlans = new HashMap();
                         for (Map.Entry<String, Map> entry2 : interfaces.entrySet()) {
                             String iface = entry2.getKey();
                             String idiface = null;
-                            if(area_node_ifacename_ifaceid.get(area) != null &&
-                               area_node_ifacename_ifaceid.get(area).get(node) != null &&
-                               ((Map)area_node_ifacename_ifaceid.get(area).get(node)).get(iface) != null
-                              ) {
-                                idiface = (String)((Map)area_node_ifacename_ifaceid.get(area).get(node)).get(iface);
+                            if (area_node_ifacename_ifaceid.get(area) != null &&
+                                    area_node_ifacename_ifaceid.get(area).get(node) != null &&
+                                    ((Map) area_node_ifacename_ifaceid.get(area).get(node)).get(iface) != null
+                            ) {
+                                idiface = (String) ((Map) area_node_ifacename_ifaceid.get(area).get(node)).get(iface);
                             }
-                            if(idiface != null) {
+                            if (idiface != null) {
                                 Map<String, String> iface_info = entry2.getValue();
                                 ArrayList<String> vlans = new ArrayList();
                                 String access_vlan = iface_info.get("access_vlan");
-                                if(access_vlan != null) {
-                                    if(access_vlan.isEmpty())
+                                if (access_vlan != null) {
+                                    if (access_vlan.isEmpty())
                                         access_vlan = "1";
                                     vlans.add(access_vlan);
                                 }
                                 String trunk_vlan = iface_info.get("trunk_vlan");
-                                if(trunk_vlan != null) {
-                                    if(trunk_vlan.isEmpty())
+                                if (trunk_vlan != null) {
+                                    if (trunk_vlan.isEmpty())
                                         trunk_vlan = "1";
                                     String[] mas = trunk_vlan.split(",");
                                     vlans.addAll(new ArrayList<>(Arrays.asList(mas)));
                                 }
-                                if(!vlans.isEmpty())
+                                if (!vlans.isEmpty())
                                     idiface_vlans.put(idiface, vlans);
                             }
                         }
-                        if(!idiface_vlans.isEmpty())
+                        if (!idiface_vlans.isEmpty())
                             node_idiface_vlans.put(node, idiface_vlans);
                     }
                 }
-                if(!node_idiface_vlans.isEmpty())
+                if (!node_idiface_vlans.isEmpty())
                     area_node_idiface_vlans.put(area, node_idiface_vlans);
 
             }
         }
-        
+
         return area_node_idiface_vlans;
     }
 
@@ -15259,7 +15496,7 @@ public class Utils {
             String area = entry.getKey();
             ArrayList<String[]> val = entry.getValue();
             Map<String, Boolean> node_arpmac_exist = new HashMap();
-            for(String[] item : val) {
+            for (String[] item : val) {
                 String node = item[0];
                 node_arpmac_exist.put(node, true);
             }
@@ -15267,22 +15504,24 @@ public class Utils {
         }
         return area_node_arpmac_exist;
     }
-    
+
     public Map<String, Map> filterNodes(Map<String, Map> Info, String filters_file) {
         Map<String, Map> filters = Neb.utils.readJSONFile(filters_file);
-        if(filters != null && !filters.isEmpty()) {
+        if (filters != null && !filters.isEmpty()) {
             Map<String, ArrayList> include = filters.get("include");
             Map<String, ArrayList> exclude = filters.get("exclude");
 
+            Map area_node_info_brief = getNodeInfoBrief(Info);
+
             for (Map.Entry<String, Map> entry : Info.entrySet()) {
-//                String area = entry.getKey();
+                String area = entry.getKey();
                 Map val = entry.getValue();
-                Map<String, Map> nodes_information = (Map)val.get("nodes_information");
-                ArrayList<ArrayList<String>> links = (ArrayList)val.get("links");
-                ArrayList<String[]> mac_ip_port = (ArrayList)val.get("mac_ip_port");
+                Map<String, Map> nodes_information = (Map) val.get("nodes_information");
+                ArrayList<ArrayList<String>> links = (ArrayList) val.get("links");
+                ArrayList<String[]> mac_ip_port = (ArrayList) val.get("mac_ip_port");
                 // get node -> number_links
                 Map<String, Integer> nodes_numLinks = new HashMap();
-                if(links != null) {
+                if (links != null) {
                     for (ArrayList<String> link : links) {
                         if (nodes_numLinks.get(link.get(0)) != null) {
                             Integer numLinks = nodes_numLinks.get(link.get(0));
@@ -15302,37 +15541,37 @@ public class Utils {
                 }
                 // get nodes_clients
                 Map<String, String> nodes_clients = new HashMap();
-                if(mac_ip_port != null) {
+                if (mac_ip_port != null) {
                     for (String[] mip : mac_ip_port) {
                         nodes_clients.put(mip[2], mip[2]);
                     }
                 }
 
                 ArrayList<String> node_exclude_list = new ArrayList();
-                if(nodes_information != null) {
+                if (nodes_information != null) {
                     for (Map.Entry<String, Map> entry1 : nodes_information.entrySet()) {
                         String node = entry1.getKey();
-                        if(node.equals("(00:90:fa:a5:75:70)"))
-                            System.out.println("11111");
+//                        if (node.equals("(00:90:fa:a5:75:70)"))
+//                            System.out.println("11111");
                         Map<String, Map> node_info = entry1.getValue();
-                        if(node_info != null && 
-                                (nodes_numLinks.get(node) == null || nodes_numLinks.get(node) == 1) && 
+                        if (node_info != null &&
+                                (nodes_numLinks.get(node) == null || nodes_numLinks.get(node) == 1) &&
                                 nodes_clients.get(node) == null) {
                             // check include
-                            if(include != null) {
+                            if (include != null) {
                                 boolean node_include = false;
                                 for (Map.Entry<String, ArrayList> entry2 : include.entrySet()) {
                                     String key = entry2.getKey();
                                     ArrayList<String> val_list = entry2.getValue();
-                                    if(key.equals("key")) {
+                                    if (key.equals("key")) {
                                         boolean found_shablon = false;
-                                        for(String shablon : val_list) {
-                                            if(node.toLowerCase().matches(shablon.toLowerCase())) {
+                                        for (String shablon : val_list) {
+                                            if (node.toLowerCase().matches(shablon.toLowerCase())) {
                                                 found_shablon = true;
                                                 break;
                                             }
                                         }
-                                        if(found_shablon) {
+                                        if (found_shablon) {
                                             node_include = true;
                                             break;
                                         }
@@ -15340,38 +15579,38 @@ public class Utils {
                                         Object key_val = getKey(key, node_info);
                                         if (key_val instanceof String string) {
                                             boolean found_shablon = false;
-                                            for(String shablon : val_list) {
-                                                if(string.toLowerCase().matches(shablon.toLowerCase())) {
+                                            for (String shablon : val_list) {
+                                                if (string.toLowerCase().matches(shablon.toLowerCase())) {
                                                     found_shablon = true;
                                                     break;
                                                 }
                                             }
-                                            if(found_shablon) {
+                                            if (found_shablon) {
                                                 node_include = true;
                                                 break;
                                             }
                                         }
                                     }
                                 }
-                                if(node_include) {
+                                if (node_include) {
                                     continue;
-                                }                            
+                                }
                             }
 
                             // check exclude
-                            if(exclude != null) {
+                            if (exclude != null) {
                                 for (Map.Entry<String, ArrayList> entry2 : exclude.entrySet()) {
                                     String key = entry2.getKey();
                                     ArrayList<String> val_list = entry2.getValue();
-                                    if(key.equals("key")) {
+                                    if (key.equals("key")) {
                                         boolean found_shablon = false;
-                                        for(String shablon : val_list) {
-                                            if(node.toLowerCase().matches(shablon.toLowerCase())) {
+                                        for (String shablon : val_list) {
+                                            if (node.toLowerCase().matches(shablon.toLowerCase())) {
                                                 found_shablon = true;
                                                 break;
                                             }
                                         }
-                                        if(found_shablon) {
+                                        if (found_shablon) {
                                             node_exclude_list.add(node);
                                             break;
                                         }
@@ -15379,105 +15618,194 @@ public class Utils {
                                         Object key_val = getKey(key, node_info);
                                         if (key_val instanceof String string) {
                                             boolean found_shablon = false;
-                                            for(String shablon : val_list) {
-                                                if(string.toLowerCase().matches(shablon.toLowerCase())) {
+                                            for (String shablon : val_list) {
+                                                if (string.toLowerCase().matches(shablon.toLowerCase())) {
                                                     found_shablon = true;
                                                     break;
                                                 }
                                             }
-                                            if(found_shablon) {
+                                            if (found_shablon) {
                                                 node_exclude_list.add(node);
                                                 break;
                                             }
                                         }
                                     }
 
-                                }                         
+                                }
                             }
                             // check empty
                             boolean find_key = false;
-                            if(exclude != null) {
+                            if (exclude != null) {
                                 for (Map.Entry<String, ArrayList> entry2 : exclude.entrySet()) {
                                     String key = entry2.getKey();
-                                    if(!key.equals("/general/base_address")) {
+                                    if (!key.equals("/general/base_address")) {
                                         Object key_val = getKey(key, node_info);
-                                        if(key_val != null) {
+                                        if (key_val != null) {
                                             find_key = true;
                                             break;
                                         }
                                     }
                                 }
                             }
-                            if(!find_key) {
+                            if (!find_key) {
                                 node_exclude_list.add(node);
                             }
-                            
+
                         }
                     }
                 }
 
-                // delete nodes from nodes_information
-                for(String node : node_exclude_list) {
-                    if(nodes_information != null && nodes_information.get(node) != null) {
-//                        if(node.equals("(b4:96:91:92:a6:10)"))
-//                            System.out.println("1111111");                        
-                        nodes_information.remove(node);
-                        logger.Println("Filter node delete: "+node, logger.DEBUG);
-                    }
-                }
-                // delete nodes from links
-                if(links != null) {
-                    ArrayList<ArrayList<String>> links_new = new ArrayList();
-                    for(ArrayList<String> link : links) {
-                        boolean is_find = false;
-                        for(String node : node_exclude_list) {
-    //                        if(node.equals("(b4:96:91:92:a6:10)"))
-    //                            System.out.println("1111111");
-
-                            if(link.get(0).equals(node) || link.get(3).equals(node)) {
-                                is_find = true;
-                                break;
-                            }                   
+                if (!node_exclude_list.isEmpty()) {
+                    // delete nodes from nodes_information
+                    for (String node : node_exclude_list) {
+                        if (nodes_information != null && nodes_information.get(node) != null) {
+                            nodes_information.remove(node);
+                            logger.Println("Filter node delete: " + node, logger.DEBUG);
                         }
-                        if(!is_find) {
-                            links_new.add(link);
+                    }
+                    // delete nodes from links
+                    if (links != null) {
+                        ArrayList<ArrayList<String>> links_new = new ArrayList();
+                        for (ArrayList<String> link : links) {
+                            boolean is_find = false;
+                            for (String node : node_exclude_list) {
+                                if (link.get(0).equals(node) || link.get(3).equals(node)) {
+                                    is_find = true;
+                                    break;
+                                }
+                            }
+                            if (!is_find) {
+                                links_new.add(link);
+                            } else {
+                                logger.Println("Filter link delete: " + link.get(0) + " " + link.get(2) + " <---> " + link.get(3) + " " + link.get(5), logger.DEBUG);
+                            }
+                        }
+                        val.put("links", links_new);
+                    }
+
+                    // adding node info to mac_ip_port
+                    Map node_info_brief = (Map) area_node_info_brief.get(area);
+                    Map<String, String[]> mac_mip = new HashMap();
+                    Map<String, String[]> ip_mip = new HashMap();
+                    for (String[] mip : mac_ip_port) {
+                        mac_mip.put(mip[0], mip);
+                        ip_mip.put(mip[1], mip);
+                    }
+                    Map<String, ArrayList<String[]>> node_neightbour = new HashMap();
+                    for (ArrayList<String> link : links) {
+                        String[] mas1 = new String[3];
+                        mas1[0] = link.get(3);
+                        mas1[1] = link.get(4);
+                        mas1[2] = link.get(5);
+                        if(node_neightbour.get(link.get(0)) != null) {
+                            node_neightbour.get(link.get(0)).add(mas1);
                         } else {
-                            logger.Println("Filter link delete: "+link.get(0)+" "+link.get(2)+" <---> "+link.get(3)+" "+link.get(5), logger.DEBUG);
+                            ArrayList<String[]> tmp_list = new ArrayList();
+                            tmp_list.add(mas1);
+                            node_neightbour.put(link.get(0), tmp_list);
+                        }
+                        String[] mas2 = new String[3];
+                        mas2[0] = link.get(0);
+                        mas2[1] = link.get(1);
+                        mas2[2] = link.get(2);
+                        if(node_neightbour.get(link.get(3)) != null) {
+                            node_neightbour.get(link.get(3)).add(mas2);
+                        } else {
+                            ArrayList<String[]> tmp_list = new ArrayList();
+                            tmp_list.add(mas2);
+                            node_neightbour.put(link.get(3), tmp_list);
                         }
                     }
-                    val.put("links", links_new);
+                    if (node_info_brief != null) {
+                        for (String node : node_exclude_list) {
+                            Map info_brief = (Map) ((Map) (Map) area_node_info_brief.get(area)).get(node);
+                            if(info_brief != null) {
+                                ArrayList<String> mac_list = (ArrayList) info_brief.get("mac_list");
+                                ArrayList<String> ip_list = (ArrayList) info_brief.get("ip_list");
+                                if (node_neightbour.get(node) != null && node_neightbour.get(node).size() == 1) {
+                                    if (ip_list != null) {
+                                        for (String ip : ip_list) {
+                                            if (ip_mip.get(ip) == null) {
+                                                String[] mas = new String[6];
+                                                if (mac_list != null && !mac_list.isEmpty()) {
+                                                    mas[0] = mac_list.get(0).substring(0, 2)+":"+
+                                                            mac_list.get(0).substring(2, 4)+":"+
+                                                            mac_list.get(0).substring(4, 6)+":"+
+                                                            mac_list.get(0).substring(6, 8)+":"+
+                                                            mac_list.get(0).substring(8, 10)+":"+
+                                                            mac_list.get(0).substring(10, 12);
+                                                } else {
+                                                    mas[0] = "unknown";
+                                                }
+                                                mas[1] = ip;
+                                                mas[2] = node_neightbour.get(node).get(0)[0];
+                                                mas[3] = node_neightbour.get(node).get(0)[1];
+                                                mas[4] = node_neightbour.get(node).get(0)[2];
+                                                mas[5] = "";
+                                                mac_ip_port.add(mas);
+                                            }
+                                        }
+                                    } else {
+                                        if (mac_list != null) {
+                                            for (String mac : mac_list) {
+                                                if (mac_mip.get(mac) == null) {
+                                                    String[] mas = new String[6];
+                                                    mas[0] = mac.substring(0, 2)+":"+
+                                                            mac.substring(2, 4)+":"+
+                                                            mac.substring(4, 6)+":"+
+                                                            mac.substring(6, 8)+":"+
+                                                            mac.substring(8, 10)+":"+
+                                                            mac.substring(10, 12);
+                                                    if (ip_list != null && !ip_list.isEmpty()) {
+                                                        mas[1] = ip_list.get(0);
+                                                    } else {
+                                                        mas[1] = "unknown";
+                                                    }
+                                                    mas[2] = node_neightbour.get(node).get(0)[0];
+                                                    mas[3] = node_neightbour.get(node).get(0)[1];
+                                                    mas[4] = node_neightbour.get(node).get(0)[2];
+                                                    mas[5] = "";
+                                                    mac_ip_port.add(mas);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
         return Info;
     }
-    
+
     public Map<String, Map> imageNodes(Map<String, Map> Info, String image_file) {
         Map<String, String> shablon_image = Neb.utils.readJSONFile(image_file);
-        
-        if(shablon_image != null && !shablon_image.isEmpty()) {
+
+        if (shablon_image != null && !shablon_image.isEmpty()) {
             for (Map.Entry<String, Map> entry : Info.entrySet()) {
 //                String area = entry.getKey();
                 Map val = entry.getValue();
-                Map<String, Map> nodes_information = (Map)val.get("nodes_information");
-                if(nodes_information != null) {
+                Map<String, Map> nodes_information = (Map) val.get("nodes_information");
+                if (nodes_information != null) {
                     for (Map.Entry<String, Map> entry1 : nodes_information.entrySet()) {
                         String node = entry1.getKey();
                         Map node_info = entry1.getValue();
-                        if(node_info.get("image") == null) {
-                            Map<String, Map> interfaces = (Map)node_info.get("interfaces");
-                            if(interfaces != null) {
+                        if (node_info.get("image") == null) {
+                            Map<String, Map> interfaces = (Map) node_info.get("interfaces");
+                            if (interfaces != null) {
                                 ArrayList<String> iface_list = new ArrayList();
                                 for (Map.Entry<String, Map> entry_ifaces : interfaces.entrySet()) {
                                     iface_list.add(entry_ifaces.getKey());
                                 }
                                 Pattern pattern = Pattern.compile("[A-Za-z]+\\s*(\\d+)/\\d+/\\d+");
                                 Map<String, Integer> slot_numiface = new HashMap();
-                                for(String iface : iface_list) {
+                                for (String iface : iface_list) {
                                     Matcher matcher = pattern.matcher(iface);
-                                    if(matcher.find()){  
+                                    if (matcher.find()) {
                                         String slot_digit = matcher.group(1);
-                                        if(slot_numiface.get(slot_digit) == null) {
+                                        if (slot_numiface.get(slot_digit) == null) {
                                             slot_numiface.put(slot_digit, 1);
                                         } else {
                                             int num = slot_numiface.get(slot_digit);
@@ -15486,26 +15814,26 @@ public class Utils {
                                         }
                                     }
                                 }
-                                if(slot_numiface.size() > 1) {
+                                if (slot_numiface.size() > 1) {
                                     Map<String, Integer> slot_numiface_new = new HashMap();
                                     for (Map.Entry<String, Integer> entry_slot : slot_numiface.entrySet()) {
                                         String slot = entry_slot.getKey();
                                         int num = entry_slot.getValue();
-                                        if(num > 20) {
+                                        if (num > 20) {
                                             slot_numiface_new.put(slot, num);
                                         }
                                     }
                                     String image_stack = null;
-                                    if(slot_numiface_new.size() == 2) {
+                                    if (slot_numiface_new.size() == 2) {
                                         image_stack = "images/Cisco/Stack-2.png";
-                                    } else if(slot_numiface_new.size() == 3) {
+                                    } else if (slot_numiface_new.size() == 3) {
                                         image_stack = "images/Cisco/Stack-3.png";
-                                    } else if(slot_numiface_new.size() >= 4) {
+                                    } else if (slot_numiface_new.size() >= 4) {
                                         image_stack = "images/Cisco/Stack-4.png";
                                     }
-                                    if(image_stack != null) {
+                                    if (image_stack != null) {
                                         node_info.put("image", image_stack);
-                                        logger.Println("Set node: "+node+" image: "+image_stack, logger.DEBUG);
+                                        logger.Println("Set node: " + node + " image: " + image_stack, logger.DEBUG);
                                         continue;
                                     }
 
@@ -15514,102 +15842,102 @@ public class Utils {
 
 
                             ArrayList<String> ident_list = new ArrayList();
-                            if(node_info.get("general") != null) {
-                                String sysDescription = (String)((Map)node_info.get("general")).get("sysDescription");
-                                if(sysDescription != null)
-                                    ident_list.add(sysDescription);                
-                                String model = (String)((Map)node_info.get("general")).get("model");
-                                if(model != null)
-                                    ident_list.add(model);                
+                            if (node_info.get("general") != null) {
+                                String sysDescription = (String) ((Map) node_info.get("general")).get("sysDescription");
+                                if (sysDescription != null)
+                                    ident_list.add(sysDescription);
+                                String model = (String) ((Map) node_info.get("general")).get("model");
+                                if (model != null)
+                                    ident_list.add(model);
                             }
 
                             String image_node = null;
-                            for(String ident : ident_list) {
+                            for (String ident : ident_list) {
                                 for (Map.Entry<String, String> entry2 : shablon_image.entrySet()) {
                                     String shablon = entry2.getKey();
                                     String image = entry2.getValue();
-                                    if(ident.toLowerCase().matches(shablon.toLowerCase())) {
+                                    if (ident.toLowerCase().matches(shablon.toLowerCase())) {
                                         image_node = image;
                                         break;
-                                    }                                
+                                    }
                                 }
-                                if(image_node != null) {
+                                if (image_node != null) {
                                     break;
                                 }
                             }
-                            if(image_node != null) {
+                            if (image_node != null) {
                                 node_info.put("image", image_node);
-                                logger.Println("Set node: "+node+" image: "+image_node, logger.DEBUG);
+                                logger.Println("Set node: " + node + " image: " + image_node, logger.DEBUG);
                             }
                         }
                     }
                 }
             }
         }
-        
+
         return Info;
     }
-    
+
     public Map<String, Map> applyImport(String import_file, Map<String, Map> Info) {
         ArrayList<Map> import_list = readJSONFileToList(import_file);
-        for(Map task : import_list) {
-            String command = (String)task.get("command");
-            String key = (String)task.get("key");
-            Object value = task.get("value");            
-            if(command != null && key != null && value != null && command.equals("add")) {
+        for (Map task : import_list) {
+            String command = (String) task.get("command");
+            String key = (String) task.get("key");
+            Object value = task.get("value");
+            if (command != null && key != null && value != null && command.equals("add")) {
                 setKey(key, value, Info);
-            } else if(command != null && key != null && value != null && command.equals("add_list")) {
+            } else if (command != null && key != null && value != null && command.equals("add_list")) {
                 Object val = getKey(key, Info);
-                if(val instanceof List list) {
+                if (val instanceof List list) {
                     list.add(value);
-                }           
-            } else if(command != null && key != null && command.equals("del")) {
-                    deleteKey(key, Info);
-            } else if(command != null && key != null && value != null && command.equals("del_list")) {
+                }
+            } else if (command != null && key != null && command.equals("del")) {
+                deleteKey(key, Info);
+            } else if (command != null && key != null && value != null && command.equals("del_list")) {
                 Object val = getKey(key, Info);
-                if(val instanceof List list) {
+                if (val instanceof List list && !((List) val).isEmpty()) {
                     int prev_size = list.size();
-                    val = deleteFromList(value, (ArrayList)val);
-                    if(list.size() != prev_size) {
+                    val = deleteFromList(value, (ArrayList) val);
+                    if (list.size() != prev_size) {
                         deleteKey(key, Info);
-                        setKey(key, val, Info);                        
+                        setKey(key, val, Info);
                     }
 //                    deleteKey(key, Info);
 //                    setKey(key, val, Info);
-                }             
+                }
             }
         }
 
         return Info;
     }
-    
+
     public boolean is_cfg_empty(Map cfg) {
-        Map<String, Map> areas = (Map)cfg.get("areas");
-        if(areas != null) {
+        Map<String, Map> areas = (Map) cfg.get("areas");
+        if (areas != null) {
             for (Map.Entry<String, Map> entry : areas.entrySet()) {
                 Map area = entry.getValue();
-                ArrayList<String> networks = (ArrayList)area.get("networks");
-                ArrayList<String> snmp_community = (ArrayList)area.get("snmp_community");
-                if(!networks.isEmpty() && !snmp_community.isEmpty()) {
+                ArrayList<String> networks = (ArrayList) area.get("networks");
+                ArrayList<String> snmp_community = (ArrayList) area.get("snmp_community");
+                if (!networks.isEmpty() && !snmp_community.isEmpty()) {
                     return false;
                 }
             }
         }
         return true;
     }
-    
-    public Map inpit_base_cfg() {
+
+    public Map input_base_cfg() {
         Scanner in = new Scanner(System.in);
         ArrayList<String> networks = new ArrayList();
         ArrayList<String> community = new ArrayList();
-        while(true) {
+        while (true) {
             System.out.print("Input scanning networks(192.168.0.0/24, 10.1.1.1): ");
             String net_str = in.nextLine();
             String[] mas = net_str.split(",");
             boolean error = false;
-            for(String net : mas) {
+            for (String net : mas) {
                 net = net.trim();
-                if(!(net.matches("\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+") || 
+                if (!(net.matches("\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+") ||
                         net.matches("\\d+\\.\\d+\\.\\d+\\.\\d+"))) {
                     error = true;
                     break;
@@ -15617,20 +15945,20 @@ public class Utils {
                     networks.add(net);
                 }
             }
-            if(!error) break;
+            if (!error) break;
         }
         System.out.print("Input snmp community(community1, community2): ");
         String snmp_str = in.nextLine();
         String[] mas = snmp_str.split(",");
-        for(String comm : mas) {
+        for (String comm : mas) {
             community.add(comm.trim());
         }
-        
+
         Map cfg = new LinkedHashMap();
         ArrayList<String> times = new ArrayList();
         times.add("00:00");
         cfg.put("build_network_time", times);
-        
+
         Map areas = new LinkedHashMap();
         Map area = new LinkedHashMap();
         area.put("description", "area description");
@@ -15641,34 +15969,35 @@ public class Utils {
         area.put("discovery_networks", "yes");
         areas.put("area", area);
         cfg.put("areas", areas);
-        
+
         Map users = new LinkedHashMap();
         Map admin = new LinkedHashMap();
         admin.put("passwd", "admin");
         admin.put("access", "write");
         users.put("admin", admin);
         cfg.put("users", users);
-        
+
         cfg.put("calculate_links_from_counters", "yes");
-        
+
         ArrayList<Integer> included_port = new ArrayList();
         included_port.add(22);
         included_port.add(23);
         cfg.put("included_port", included_port);
-        
+
         ArrayList<Integer> excluded_port = new ArrayList();
         excluded_port.add(135);
         cfg.put("excluded_port", excluded_port);
-        
+
         cfg.put("map_file", "neb.map");
         cfg.put("http_port", 8080L);
         cfg.put("https_port", 9090L);
         cfg.put("level_log", "INFO");
         cfg.put("history_num_days", 41L);
         cfg.put("log_num_days", 41L);
-        
+
         return cfg;
     }
+
 }
 
 //class Watch_Telemetry_Lib extends Thread {

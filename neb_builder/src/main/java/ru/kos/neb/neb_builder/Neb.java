@@ -48,6 +48,8 @@ public class Neb {
 //    private static String dump = "dump.tmp";
     public static String debug_folder = "debug";
     public static String static_data_folder = "static_data";
+    public static Map<String, ArrayList<String>> area_networks = new HashMap();
+//    public static ArrayList<String> networks_for_current_area = new ArrayList();
     public static int history_num_days = 41;
     public static int log_num_days = 41;
     public static Map<String, String[]> user_passwd_buffer = new HashMap();
@@ -77,7 +79,6 @@ public class Neb {
     public static Logger logger;
     public static Logger logger_user;
     public static ArrayList<String> node_scanning = new ArrayList();
-    public static ArrayList<String> networks = new ArrayList();
 //    public static String home = "";
     public static Map<String, String[]> nodes_info = new HashMap();
     public static ArrayList<String[]> links_info = new ArrayList();
@@ -203,11 +204,11 @@ public class Neb {
         if(cfg_file.exists()) {
             cfg = utils.readConfig(neb_cfg);
             if(utils.is_cfg_empty(cfg)) {
-                cfg = utils.inpit_base_cfg();
+                cfg = utils.input_base_cfg();
                 utils.mapToFile(cfg, neb_cfg, DELAY_WRITE_FILE);
             }
         } else {
-            cfg = utils.inpit_base_cfg();
+            cfg = utils.input_base_cfg();
             utils.mapToFile(cfg, neb_cfg, DELAY_WRITE_FILE);
         }
 
@@ -414,9 +415,12 @@ public class Neb {
             node_scanning.clear();
             //////////////////////////////////////////////////////////////////////////////////////
 
-            Map<String, ArrayList<String>> area_networks = new HashMap();
+//            Map<String, ArrayList<String>> area_networks = new HashMap();
             for (Map.Entry<String, Map> area : areas.entrySet()) {
-                networks.clear();
+                ArrayList<String> networks = new ArrayList();
+                ArrayList<String> ip_list = new ArrayList();
+//                networks.clear();
+//                ip_list.clear();
                 String area_name = area.getKey();
                 logger.Println("Area: " + area_name, logger.INFO);
                 ArrayList<String> community_list = (ArrayList<String>) area.getValue().get("snmp_community");
@@ -425,7 +429,6 @@ public class Neb {
                 Map<String, String> exclude_list = (Map<String, String>) area.getValue().get("exclude");
                 ArrayList<String> network_list = (ArrayList<String>) area.getValue().get("networks");
 
-                ArrayList<String> ip_list = new ArrayList();
                 for (String network : network_list) {
                     if (network.matches("^\\s*\\d+\\.\\d+\\.\\d+\\.\\d+\\s+\\d+\\.\\d+\\.\\d+\\.\\d+\\s*$") || network.matches("^\\s*\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+\\s*$")) {
                         networks.add(network);
@@ -482,6 +485,7 @@ public class Neb {
                 if(!informationFromNodes.isEmpty()) {
                     Map<String, Map> nodes_information = (Map<String, Map>) informationFromNodes.get("nodes_information");
                     area_networks.put(area_name, net_list);
+//                    networks_for_current_area.addAll(net_list);
                     ArrayList<ArrayList<ArrayList<String>>> result = utils.normalizationLinks(nodes_information, net_list, not_correct_networks);
                     ArrayList<ArrayList<String>> links = result.get(0);
                     ArrayList<ArrayList<String>> links_extended = result.get(1);
@@ -809,12 +813,19 @@ public class Neb {
             INFORMATION_PRE = utils.imageNodes(INFORMATION_PRE, image_nodes_file);
             logger.Println("Stop image nodes.", logger.DEBUG);            
             
+            // write to file nodes_information
+            if(DEBUG) utils.mapToFile(informationFromNodesAllAreas, debug_folder+"/info14", DELAY_WRITE_FILE);
+
+            INFORMATION_PRE = utils.setAttributesToNodes(INFORMATION_PRE, map_file, node_attribute_old_file);
+
             // Normalization 3.
             logger.Println("Start normalizeMap3 ...", logger.DEBUG);
             INFORMATION_PRE = utils.normalizeMap3(INFORMATION_PRE);
-            logger.Println("Stop normalizeMap3.", logger.DEBUG);                        
+            logger.Println("Stop normalizeMap3.", logger.DEBUG);
 
-            INFORMATION_PRE = utils.setAttributesToNodes(INFORMATION_PRE, map_file, node_attribute_old_file);
+            // write to file nodes_information
+            if(DEBUG) utils.mapToFile(informationFromNodesAllAreas, debug_folder+"/info15", DELAY_WRITE_FILE);
+
 //            utils.mapToFile((Map) INFORMATION, map_file_pre, DELAY_WRITE_FILE);
 //////////////////////////////////////////////////////////////////////////  
 

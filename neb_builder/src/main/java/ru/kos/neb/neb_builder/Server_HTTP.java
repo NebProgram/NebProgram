@@ -1447,48 +1447,52 @@ class SetImageNodes implements HttpHandler {
                     if(area != null && node != null && image != null) {
                         StringBuilder out = new StringBuilder(utils.colon_to_shablon(area) + ":" + utils.colon_to_shablon(node) + ":" + utils.colon_to_shablon(image) + "\n");
                         Map node_info = (Map)utils.getKey("/"+area+"/nodes_information/"+node, Server_HTTP.INFO);
-                        Map node_info_new = new HashMap(node_info);
-                        utils.setKey("/image", image, node_info_new);
-                        utils.setKey("/"+area+"/nodes_information/"+node, node_info_new, Neb.area_nodes_images_buffer);
-                        Neb.clusters_nodes_image = utils.define_Images(Server_HTTP.INFO, Neb.area_nodes_images_buffer);
-                        
-                        // get areas_nodes_images_auto
-                        Map areas_nodes_images_auto = new HashMap();
-                        for(Map.Entry<String, Map> area_it : ((Map<String, Map>) Server_HTTP.INFO).entrySet()) {
-                            String area1 = area_it.getKey();
-                            Map<String, Map> val = area_it.getValue();
-                            if(val.get("nodes_information") != null) {
-                                for(Map.Entry<String, Map> node_it : ((Map<String, Map>) val.get("nodes_information")).entrySet()) {
-                                    String node1 = node_it.getKey();
-                                    String image_auto = (String)utils.getKey("/"+area1+"/nodes_information/"+node1+"/image_auto", Server_HTTP.INFO);
-                                    String image1 = utils.getNodesImage(Server_HTTP.INFO, area1, node1);
-                                    if(image1 == null)
-                                        utils.setKey("/" + area1 + "/" + node1 + "/image_auto", Objects.requireNonNullElse(image_auto, ""), areas_nodes_images_auto);
+                        if(node_info != null) {
+                            Map node_info_new = new HashMap(node_info);
+                            utils.setKey("/image", image, node_info_new);
+                            utils.setKey("/" + area + "/nodes_information/" + node, node_info_new, Neb.area_nodes_images_buffer);
+                            Neb.clusters_nodes_image = utils.define_Images(Server_HTTP.INFO, Neb.area_nodes_images_buffer);
+
+                            // get areas_nodes_images_auto
+                            Map areas_nodes_images_auto = new HashMap();
+                            for (Map.Entry<String, Map> area_it : ((Map<String, Map>) Server_HTTP.INFO).entrySet()) {
+                                String area1 = area_it.getKey();
+                                Map<String, Map> val = area_it.getValue();
+                                if (val.get("nodes_information") != null) {
+                                    for (Map.Entry<String, Map> node_it : ((Map<String, Map>) val.get("nodes_information")).entrySet()) {
+                                        String node1 = node_it.getKey();
+                                        String image_auto = (String) utils.getKey("/" + area1 + "/nodes_information/" + node1 + "/image_auto", Server_HTTP.INFO);
+                                        String image1 = utils.getNodesImage(Server_HTTP.INFO, area1, node1);
+                                        if (image1 == null)
+                                            utils.setKey("/" + area1 + "/" + node1 + "/image_auto", Objects.requireNonNullElse(image_auto, ""), areas_nodes_images_auto);
+                                    }
                                 }
                             }
-                        }
 
-                        // chahges nodes images
-                        for(String[] it : Neb.clusters_nodes_image) {
-                            String node1 = it[0];
-                            String image1 = it[1];
-                            String area1 = it[3];
-                            String image_auto_new = null;
-                            if(areas_nodes_images_auto.get(area1) != null &&
-                                ((Map)areas_nodes_images_auto.get(area1)).get(node1) != null &&
-                                ((Map)((Map)areas_nodes_images_auto.get(area1)).get(node1)).get("image_auto") != null) {
-                                String image_auto = (String)((Map)((Map)areas_nodes_images_auto.get(area1)).get(node1)).get("image_auto");
-                                if(!image_auto.equals(image1)) {
-                                    image_auto_new = image1;
+                            // chahges nodes images
+                            for (String[] it : Neb.clusters_nodes_image) {
+                                String node1 = it[0];
+                                String image1 = it[1];
+                                String area1 = it[3];
+                                String image_auto_new = null;
+                                if (areas_nodes_images_auto.get(area1) != null &&
+                                        ((Map) areas_nodes_images_auto.get(area1)).get(node1) != null &&
+                                        ((Map) ((Map) areas_nodes_images_auto.get(area1)).get(node1)).get("image_auto") != null) {
+                                    String image_auto = (String) ((Map) ((Map) areas_nodes_images_auto.get(area1)).get(node1)).get("image_auto");
+                                    if (!image_auto.equals(image1)) {
+                                        image_auto_new = image1;
+                                    }
+                                }
+                                if (image_auto_new != null) {
+                                    out.append(utils.colon_to_shablon(area1)).append(":").append(utils.colon_to_shablon(node1)).append(":").append(utils.colon_to_shablon(image_auto_new)).append("\n");
+                                    Neb.logger.Println("Cluster image node: " + area1 + "/" + node1 + " is changed image - " + image_auto_new, Neb.logger.DEBUG);
                                 }
                             }
-                            if(image_auto_new != null) {
-                                out.append(utils.colon_to_shablon(area1)).append(":").append(utils.colon_to_shablon(node1)).append(":").append(utils.colon_to_shablon(image_auto_new)).append("\n");
-                                Neb.logger.Println("Cluster image node: "+area1+"/"+node1+" is changed image - "+image_auto_new, Neb.logger.DEBUG);                          
-                            }
-                        }
 
-                        Server_HTTP.response(he, 200, out.toString().trim());
+                            Server_HTTP.response(he, 200, out.toString().trim());
+                        } else {
+                            Server_HTTP.response(he, 200, out.toString().trim());
+                        }
                     } else {
                         Server_HTTP.response(he, 400, "Error query: not set area and node and image.");  
                     }
