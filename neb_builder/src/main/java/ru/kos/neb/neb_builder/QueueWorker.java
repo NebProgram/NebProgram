@@ -47,7 +47,7 @@ public class QueueWorker extends Thread {
                     for(Map.Entry<String, ArrayList<String[]>> entry : queue_tmp.entrySet()) {
                         String file = entry.getKey();
                         Map<String, Map> INFO = Neb.utils.readJSONFile(file);
-                        Map<String, Map> node_attribute = utils.readJSONFile(Neb.node_attribute_old_file);
+//                        Map<String, Map> node_attribute = utils.readJSONFile(Neb.node_attribute_old_file);
                         for(String[] key_val : entry.getValue()) {
                             String command = key_val[0];
                             String key = key_val[1];
@@ -80,19 +80,19 @@ public class QueueWorker extends Thread {
                                             ) {
                                                 String image = (String) ((Map) ((Map) INFO.get(area).get("nodes_information")).get(node)).get("image");
                                                 ArrayList<String> xy = (ArrayList<String>) ((Map) ((Map) INFO.get(area).get("nodes_information")).get(node)).get("xy");
-                                                if (node_attribute.get(area) != null) {
-                                                    Map tmp_map = new HashMap();
-                                                    if (image != null) tmp_map.put("image", image);
-                                                    if (xy != null) tmp_map.put("xy", xy);
-                                                    node_attribute.get(area).put(node, tmp_map);
-                                                } else {
-                                                    Map tmp_node_map = new HashMap();
-                                                    Map tmp_map = new HashMap();
-                                                    if (image != null) tmp_map.put("image", image);
-                                                    if (xy != null) tmp_map.put("xy", xy);
-                                                    tmp_node_map.put(node, tmp_map);
-                                                    node_attribute.put(area, tmp_node_map);
-                                                }
+//                                                if (node_attribute.get(area) != null) {
+//                                                    Map tmp_map = new HashMap();
+//                                                    if (image != null) tmp_map.put("image", image);
+//                                                    if (xy != null) tmp_map.put("xy", xy);
+//                                                    node_attribute.get(area).put(node, tmp_map);
+//                                                } else {
+//                                                    Map tmp_node_map = new HashMap();
+//                                                    Map tmp_map = new HashMap();
+//                                                    if (image != null) tmp_map.put("image", image);
+//                                                    if (xy != null) tmp_map.put("xy", xy);
+//                                                    tmp_node_map.put(node, tmp_map);
+//                                                    node_attribute.put(area, tmp_node_map);
+//                                                }
                                             }
                                         }
                                     }
@@ -194,7 +194,8 @@ public class QueueWorker extends Thread {
                         }
 //                        Neb.logger.Println("Start write info to file: "+file+" ...", Neb.logger.DEBUG);
                         Neb.utils.mapToFile(INFO, file, Neb.DELAY_WRITE_FILE);
-                        utils.mapToFile(node_attribute, Neb.node_attribute_old_file, Neb.DELAY_WRITE_FILE);
+                        Map<String, Map> area_node_attribute_old = Neb.utils.setAttributeOld(INFO, Neb.node_attribute_old_file);
+                        utils.mapToFile(area_node_attribute_old, Neb.node_attribute_old_file, Neb.DELAY_WRITE_FILE);
                       
 //                        Neb.logger.Println("Stop write info to file: "+file, Neb.logger.DEBUG);
                     }
