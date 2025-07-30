@@ -782,6 +782,11 @@ public class Neb {
                 }
             }
 
+            // read neb.map file
+            INFORMATION = new HashMap();
+            if (file_map.exists()) {
+                INFORMATION = utils.readJSONFile(map_file);
+            }
             // save nodes attribute to node_attribute_old file
             Map<String, Map> area_node_attribute_old = Neb.utils.setAttributeOld(INFORMATION, node_attribute_old_file);
             Neb.utils.mapToFile(area_node_attribute_old, node_attribute_old_file, Neb.DELAY_WRITE_FILE);
