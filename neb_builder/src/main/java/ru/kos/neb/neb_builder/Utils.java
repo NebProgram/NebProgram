@@ -15687,33 +15687,37 @@ public class Utils {
                     Map node_info_brief = (Map) area_node_info_brief.get(area);
                     Map<String, String[]> mac_mip = new HashMap();
                     Map<String, String[]> ip_mip = new HashMap();
-                    for (String[] mip : mac_ip_port) {
-                        mac_mip.put(mip[0], mip);
-                        ip_mip.put(mip[1], mip);
+                    if (mac_ip_port != null) {
+                        for (String[] mip : mac_ip_port) {
+                            mac_mip.put(mip[0], mip);
+                            ip_mip.put(mip[1], mip);
+                        }
                     }
                     Map<String, ArrayList<String[]>> node_neightbour = new HashMap();
-                    for (ArrayList<String> link : links) {
-                        String[] mas1 = new String[3];
-                        mas1[0] = link.get(3);
-                        mas1[1] = link.get(4);
-                        mas1[2] = link.get(5);
-                        if(node_neightbour.get(link.get(0)) != null) {
-                            node_neightbour.get(link.get(0)).add(mas1);
-                        } else {
-                            ArrayList<String[]> tmp_list = new ArrayList();
-                            tmp_list.add(mas1);
-                            node_neightbour.put(link.get(0), tmp_list);
-                        }
-                        String[] mas2 = new String[3];
-                        mas2[0] = link.get(0);
-                        mas2[1] = link.get(1);
-                        mas2[2] = link.get(2);
-                        if(node_neightbour.get(link.get(3)) != null) {
-                            node_neightbour.get(link.get(3)).add(mas2);
-                        } else {
-                            ArrayList<String[]> tmp_list = new ArrayList();
-                            tmp_list.add(mas2);
-                            node_neightbour.put(link.get(3), tmp_list);
+                    if (links != null) {
+                        for (ArrayList<String> link : links) {
+                            String[] mas1 = new String[3];
+                            mas1[0] = link.get(3);
+                            mas1[1] = link.get(4);
+                            mas1[2] = link.get(5);
+                            if (node_neightbour.get(link.get(0)) != null) {
+                                node_neightbour.get(link.get(0)).add(mas1);
+                            } else {
+                                ArrayList<String[]> tmp_list = new ArrayList();
+                                tmp_list.add(mas1);
+                                node_neightbour.put(link.get(0), tmp_list);
+                            }
+                            String[] mas2 = new String[3];
+                            mas2[0] = link.get(0);
+                            mas2[1] = link.get(1);
+                            mas2[2] = link.get(2);
+                            if (node_neightbour.get(link.get(3)) != null) {
+                                node_neightbour.get(link.get(3)).add(mas2);
+                            } else {
+                                ArrayList<String[]> tmp_list = new ArrayList();
+                                tmp_list.add(mas2);
+                                node_neightbour.put(link.get(3), tmp_list);
+                            }
                         }
                     }
                     if (node_info_brief != null) {
