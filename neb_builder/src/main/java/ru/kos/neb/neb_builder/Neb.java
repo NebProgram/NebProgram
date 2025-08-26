@@ -172,6 +172,7 @@ public class Neb {
         index_dir = utils.getAbsolutePath(index_dir, home_dir);
         run_post_scripts = utils.getAbsolutePath(run_post_scripts, home_dir);
 //        run_post_post_scripts = utils.GetAbsolutePath(run_post_post_scripts, home_dir);
+        history_dir = utils.getAbsolutePath(history_dir, home_dir);
         log_history_dir = utils.getAbsolutePath(log_history_dir, home_dir);
 //        secrets_file = utils.getAbsolutePath(secrets_file, home_dir);
         System.out.println("home = "+home_dir);
@@ -649,7 +650,7 @@ public class Neb {
             
             // remove old map files
             logger.Println("Remove old map and log files", logger.DEBUG);
-            utils.removeOldFiles(log_history_dir, ((Long) cfg.get("history_num_days")).intValue());
+            utils.removeOldFiles(history_dir, ((Long) cfg.get("history_num_days")).intValue());
 
             // remove advanced information 
             logger.Println("Remove advanced information", logger.DEBUG);
